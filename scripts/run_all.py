@@ -25,6 +25,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from kdpce.aggregate import aggregate  # noqa: E402
 from kdpce.data import load_config, load_dataset, make_splits, split_summary  # noqa: E402
 from kdpce.ebm_student import ebm_complexity, ebm_variance_shares, fit_ebm_student  # noqa: E402
 from kdpce.explain import (agreement_matrix, rank_agreement, screening_indices,  # noqa: E402
@@ -156,26 +157,44 @@ def stage_pce(name, cfg, X, y, seed, out, quick):
 
     cfg_pce = cfg["pce_quick"] if quick else cfg["pce"]
     names = list(X.columns)
-    rows, fitted, seen_sets = [], {}, {}
+
+    def make_student(g, **extra):
+        screened = None if g["k"] in (None, "all") else screening_indices(shap_pool, names, int(g["k"]))
+        return PCEHDMRStudent(p=int(g["p"]), r=int(g["r"]), q=float(g["q"]), screened=screened,
+                              first_order_all=bool(g["first_order_all"]), seed=seed,
+                              max_terms=cfg_pce["max_terms"], feature_names=names, **extra)
+
+    # Each configuration's row is saved as soon as it is done (status ok / duplicate / skipped),
+    # so an interrupted run resumes where it stopped. Fits are deterministic given the seed.
+    partial = out / "pce_grid_partial.csv"
+    keycols = ["p", "r", "q", "k", "first_order_all"]
+    rows = pd.read_csv(partial).to_dict("records") if partial.exists() else []
+    done = {tuple(str(r[c]) for c in keycols) for r in rows}
+    seen_sets = {}
+    best_student, best_cv = None, -np.inf             # keep only the best student in memory
     for g in pce_grid(cfg_pce):
-        screened = None if g["k"] is None else screening_indices(shap_pool, names, g["k"])
-        student = PCEHDMRStudent(p=g["p"], r=g["r"], q=g["q"], screened=screened,
-                                 first_order_all=g["first_order_all"], seed=seed,
-                                 max_terms=cfg_pce["max_terms"], feature_names=names)
         row = {"dataset": name, "seed": seed, **g, "k": g["k"] if g["k"] else "all"}
+        student = make_student(row)
         cand = student.candidate_terms(X_pool)
-        if cand is not None:                          # skip configs whose candidate set we already fitted
-            key = frozenset(cand)
-            if key in seen_sets:
-                print(f"    PCE p={g['p']} r={g['r']} q={g['q']} k={row['k']}: same candidate set "
-                      f"as {seen_sets[key]}, skipped")
-                continue
-            seen_sets[key] = f"p={g['p']} r={g['r']} q={g['q']} k={row['k']}"
+        key = frozenset(cand) if cand is not None else None
+        label = f"p={g['p']} r={g['r']} q={g['q']} k={row['k']} foa={g['first_order_all']}"
+        if key is not None and key in seen_sets:      # same candidate set as a config already seen
+            print(f"    PCE {label}: same candidate set as {seen_sets[key]}, skipped")
+            if tuple(str(row[c]) for c in keycols) not in done:
+                rows.append({**row, "status": "duplicate"})
+                pd.DataFrame(rows).to_csv(partial, index=False)
+            continue
+        if key is not None:
+            seen_sets[key] = label
+        if tuple(str(row[c]) for c in keycols) in done:
+            print(f"    PCE {label}: already done (from {partial.name}), skipped")
+            continue
         try:
             student.fit(X_pool, t_pool)               # inputs + teacher logits only
         except ValueError as e:                       # too many candidate terms
             print(f"    skipped: {e}")
             rows.append({**row, "status": "skipped_too_many_terms"})
+            pd.DataFrame(rows).to_csv(partial, index=False)
             continue
         row.update(status="ok", n_candidates=student.n_candidates_, n_terms=student.n_terms,
                    max_order=student.max_order, cv_r2_pool=student.cv_r2_,
@@ -185,25 +204,31 @@ def stage_pce(name, cfg, X, y, seed, out, quick):
         row.update({f"{k}_vs_y_test": v
                     for k, v in accuracy_metrics(y[test], student.predict(X_test)).items()})
         rows.append(row)
-        fitted[len(rows) - 1] = student
+        pd.DataFrame(rows).to_csv(partial, index=False)
+        if student.cv_r2_ > best_cv:
+            best_student, best_cv = student, student.cv_r2_
         print(f"      active={student.n_terms} order={student.max_order} "
               f"cv_r2={fmt(student.cv_r2_)} test_r2={fmt(row['r2_logit_test'])} "
-              f"offman_r2={fmt(row['r2_logit_offman'])} ({student.fit_seconds_:.1f} s)")
+              f"offman_r2={fmt(row['r2_logit_offman'])} ({student.fit_seconds_:.1f} s)", flush=True)
 
     grid = pd.DataFrame(rows)
+    grid["k"] = grid["k"].astype(str)
     ok = grid[grid.status == "ok"]
     best_i = int(ok["cv_r2_pool"].idxmax())            # chosen by CV on the pool, never by test
     grid["selected"] = False
     grid.loc[best_i, "selected"] = True
-    best = fitted[best_i]
     g = grid.loc[best_i]
+    if best_student is not None and np.isclose(best_cv, g.cv_r2_pool):
+        best = best_student
+    else:                                              # best config came from an interrupted run
+        best = make_student(g, verbose=False).fit(X_pool, t_pool)
     print(f"  selected PCE (max CV R^2 on pool): p={g.p} r={g.r} q={g.q} k={g.k} "
           f"first_order_all={g.first_order_all} -> {best.n_terms} terms")
+    np.savez(out / "pce_predictions.npz", test=best.predict(X_test), offman=best.predict(X_off),
+             teacher_test=t_test, teacher_offman=t_off)
 
     # Hybrid LARS variant of the selected configuration (reported, not used for selection).
-    hyb = PCEHDMRStudent(p=int(g.p), r=int(g.r), q=float(g.q), screened=best.screened,
-                         first_order_all=bool(g.first_order_all), ols_refit=True, seed=seed,
-                         max_terms=cfg_pce["max_terms"], feature_names=names, verbose=False)
+    hyb = make_student(g, ols_refit=True, verbose=False)
     hyb.fit(X_pool, t_pool)
     hrow = {**grid.loc[best_i].to_dict(), "selected": False, "variant": "hybrid_ols_refit",
             "n_terms": hyb.n_terms, "fit_seconds": hyb.fit_seconds_}
@@ -301,6 +326,8 @@ def stage_ebm(name, cfg, X, y, seed, out, quick):
         best = best_model
     else:                                              # best K came from an earlier, interrupted run
         best, _ = fit_ebm_student(X_pool, t_pool, best_K, seed, **kwargs)
+    np.savez(out / "ebm_predictions.npz", test=best.predict(X_test), offman=best.predict(X_off),
+             teacher_test=t_test, teacher_offman=t_off)
     per_feature, per_term, check = ebm_variance_shares(best, X_test, list(X.columns))
     per_feature.to_csv(out / "ebm_importance.csv", index=False)
     per_term.to_csv(out / "ebm_terms.csv", index=False)
@@ -390,12 +417,13 @@ def stage_explain(name, cfg, X, y, seed, out, quick):
     return mc_seconds
 
 
-def record_runtime(out, quick, name, seed, stage, seconds):
-    """Append/replace one row of runtime.csv in the stage folder."""
+def record_runtime(out, quick, name, seed, stage, seconds, resumed=False):
+    """Append/replace one row of runtime.csv in the stage folder.
+    resumed=True: the stage continued from a partial file, so `seconds` is only the remaining work."""
     path = stage_dir(out, quick) / "runtime.csv"
-    df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["dataset", "seed", "stage", "seconds"])
+    df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["dataset", "seed", "stage", "seconds", "resumed"])
     df = df[df.stage != stage]
-    df = pd.concat([df, pd.DataFrame([{"dataset": name, "seed": seed, "stage": stage, "seconds": seconds}])])
+    df = pd.concat([df, pd.DataFrame([{"dataset": name, "seed": seed, "stage": stage, "seconds": seconds, "resumed": resumed}])])
     df.to_csv(path, index=False)
 
 
@@ -413,11 +441,16 @@ def run(name, seeds, quick, stages, retrain_teacher):
         for stage, fn in [("pce", stage_pce), ("ebm", stage_ebm), ("explain", stage_explain)]:
             if stage in stages:
                 print(f"  --- stage {stage} ---")
+                # A stage that resumes from a partial file only times the remaining work; flag it.
+                resumed = (stage_dir(out, quick) / f"{stage}_grid_partial.csv").exists()
                 t0 = time.perf_counter()
                 fn(name, cfg, X, y, seed, out, quick)
                 seconds = time.perf_counter() - t0
-                record_runtime(out, quick, name, seed, stage, seconds)
-                print(f"  {stage} stage time: {seconds:.1f} s")
+                record_runtime(out, quick, name, seed, stage, seconds, resumed)
+                print(f"  {stage} stage time: {seconds:.1f} s{' (resumed run)' if resumed else ''}")
+    summary = aggregate(name, quick)                   # over every seed found on disk
+    print(f"\n  aggregated {name}: results/summary_{name}{'_quick' if quick else ''}*.csv "
+          f"({summary['n_seeds'].max() if len(summary) else 0} seed(s))")
 
 
 def main():
