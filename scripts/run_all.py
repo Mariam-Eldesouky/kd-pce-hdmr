@@ -9,7 +9,7 @@ Datasets: magic (moderate, 10 features) and bioresponse (high-dimensional, 1,776
 `--dataset all` runs these two. Musk can still be run by name but is not part of the study
 (its teacher did not generalise to unseen molecules; see the README).
 
-Stages are added phase by phase. Implemented: teacher, pce.
+Stages: teacher, pce, ebm, explain (explain needs the pce and ebm outputs).
 Each (dataset, seed) writes to results/<dataset>/seed<k>/.
 """
 import argparse
@@ -26,13 +26,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from kdpce.data import load_config, load_dataset, make_splits, split_summary  # noqa: E402
-from kdpce.explain import screening_indices, teacher_shap_global  # noqa: E402
+from kdpce.ebm_student import ebm_complexity, ebm_variance_shares, fit_ebm_student  # noqa: E402
+from kdpce.explain import (agreement_matrix, rank_agreement, screening_indices,  # noqa: E402
+                           teacher_mc_sobol, teacher_shap_global)
 from kdpce.metrics import accuracy_metrics, fidelity, off_manifold  # noqa: E402
 from kdpce.pce_hdmr import PCEHDMRStudent  # noqa: E402
 from kdpce.teacher import (load_teacher, save_teacher, teacher_logit,  # noqa: E402
                            teacher_metrics, train_teacher)
 
-ALL_STAGES = ["teacher", "pce"]
+ALL_STAGES = ["teacher", "pce", "ebm", "explain"]
 STUDY_DATASETS = ["magic", "bioresponse"]
 
 
@@ -239,6 +241,165 @@ def stage_pce(name, cfg, X, y, seed, out, quick):
 
 
 # ----------------------------------------------------------------------------------------
+# Stage: EBM student
+# ----------------------------------------------------------------------------------------
+def stage_ebm(name, cfg, X, y, seed, out, quick):
+    from sklearn.model_selection import KFold
+
+    model, splits, logits = load_frozen(out)
+    out = stage_dir(out, quick)
+    pool, test = splits["distill"], splits["test"]
+    X_pool, X_test = X.iloc[pool], X.iloc[test]
+    t_pool, t_test = logits["distill"], logits["test"]
+    X_off = off_manifold(X_test, seed)                 # same off-manifold set as the PCE stage
+    t_off = teacher_logit(model, X_off)
+
+    cfg_ebm = cfg["ebm_quick"] if quick else cfg["ebm"]
+    kwargs = cfg_ebm.get("kwargs") or {}
+    folds = list(KFold(cfg_ebm["cv_folds"], shuffle=True, random_state=seed).split(X_pool))
+
+    # Each K's row is saved as soon as it is done, so an interrupted run loses at most one K.
+    # A rerun skips the Ks already in the partial file (EBM fits are deterministic given the seed).
+    partial = out / "ebm_grid_partial.csv"
+    rows = pd.read_csv(partial).to_dict("records") if partial.exists() else []
+    done = {int(r["interactions"]) for r in rows}
+    best_model, best_cv = None, -np.inf               # keep only the best model in memory
+    for K in cfg_ebm["interactions"]:
+        if K in done:
+            print(f"    EBM K={K}: already done (from {partial.name}), skipped")
+            continue
+        # CV fidelity on the pool (used to choose K; the test set is not used).
+        t0 = time.perf_counter()
+        sse = 0.0
+        for tr, va in folds:
+            m, _ = fit_ebm_student(X_pool.iloc[tr], t_pool[tr], K, seed, **kwargs)
+            sse += np.sum((m.predict(X_pool.iloc[va]) - t_pool[va]) ** 2)
+        cv_r2 = 1 - sse / np.sum((t_pool - t_pool.mean()) ** 2)
+        cv_seconds = time.perf_counter() - t0
+        # Final fit on the whole pool.
+        m, fit_s = fit_ebm_student(X_pool, t_pool, K, seed, **kwargs)
+        row = {"dataset": name, "seed": seed, "interactions": K, "cv_r2_pool": cv_r2,
+               "fit_seconds": fit_s, "cv_seconds": cv_seconds, **ebm_complexity(m)}
+        for tag, Xs, ts in [("test", X_test, t_test), ("offman", X_off, t_off)]:
+            row.update({f"{k}_{tag}": v for k, v in fidelity(ts, m.predict(Xs)).items()})
+        row.update({f"{k}_vs_y_test": v for k, v in accuracy_metrics(y[test], m.predict(X_test)).items()})
+        rows.append(row)
+        pd.DataFrame(rows).to_csv(partial, index=False)
+        if cv_r2 > best_cv:
+            best_model, best_cv = m, cv_r2
+        del m
+        print(f"    EBM K={K}: terms={row['n_terms']} params={row['n_parameters']} cv_r2={fmt(cv_r2)} "
+              f"test_r2={fmt(row['r2_logit_test'])} offman_r2={fmt(row['r2_logit_offman'])} "
+              f"(fit {fit_s:.1f} s, CV {cv_seconds:.1f} s)", flush=True)
+    grid = pd.DataFrame(rows)
+    grid = grid[grid["interactions"].isin(cfg_ebm["interactions"])].reset_index(drop=True)
+    best_K = int(grid.loc[grid["cv_r2_pool"].idxmax(), "interactions"])
+    grid["selected"] = grid["interactions"] == best_K
+    grid.to_csv(out / "ebm_grid.csv", index=False)
+
+    if best_model is not None and best_cv == grid["cv_r2_pool"].max():
+        best = best_model
+    else:                                              # best K came from an earlier, interrupted run
+        best, _ = fit_ebm_student(X_pool, t_pool, best_K, seed, **kwargs)
+    per_feature, per_term, check = ebm_variance_shares(best, X_test, list(X.columns))
+    per_feature.to_csv(out / "ebm_importance.csv", index=False)
+    per_term.to_csv(out / "ebm_terms.csv", index=False)
+    pd.DataFrame([check]).to_csv(out / "ebm_variance_check.csv", index=False)
+    print(f"  selected EBM (max CV R^2 on pool): K={best_K}")
+    cols = ["interactions", "n_terms", "n_parameters", "cv_r2_pool", "r2_logit_test", "label_agreement_test",
+            "mean_kl_test", "r2_logit_offman", "accuracy_vs_y_test", "auc_vs_y_test"]
+    print(grid[cols].to_string(index=False, float_format=fmt))
+    print(f"  sum of term variances / Var(prediction) on test: {check['ratio_sum_term_var_over_var_pred']:.4f}")
+    print("  top features by EBM total variance share (test):")
+    print(per_feature.sort_values("total", ascending=False).head(8).to_string(index=False, float_format=fmt))
+    print("  top terms:")
+    print(per_term.head(5).to_string(index=False, float_format=fmt))
+
+
+# ----------------------------------------------------------------------------------------
+# Stage: explanations (teacher MC Sobol', agreement) and the combined fidelity table
+# ----------------------------------------------------------------------------------------
+def stage_explain(name, cfg, X, y, seed, out, quick):
+    model, splits, logits = load_frozen(out)
+    out = stage_dir(out, quick)
+    pool, test = splits["distill"], splits["test"]
+    X_pool, X_test = X.iloc[pool], X.iloc[test]
+    names = list(X.columns)
+
+    # Teacher MC Sobol' on independent resamples of the pool's marginals.
+    N = cfg["mc_sobol"]["N_quick"] if quick else cfg["mc_sobol"]["N"]
+    t0 = time.perf_counter()
+    mc, V = teacher_mc_sobol(model, X_pool, N, seed)
+    mc_seconds = time.perf_counter() - t0
+    mc.to_csv(out / "teacher_mc_sobol.csv", index=False)
+    print(f"  teacher MC Sobol': N={N}, d={len(names)}, {N * (len(names) + 2):,} teacher calls, "
+          f"{mc_seconds:.1f} s, Var(logit) under independent inputs = {V:.4f} "
+          f"(on test data: {np.var(logits['test']):.4f})")
+    print(mc.sort_values("ST", ascending=False).head(8).to_string(index=False, float_format=fmt))
+    print(f"  sum of first-order indices: {mc.S1.sum():.4f} (1 - sum = share of variance from interactions)")
+
+    # Collect every explanation as one importance score per feature.
+    pce = pd.read_csv(out / "pce_sobol.csv").set_index("feature")
+    ebm = pd.read_csv(out / "ebm_importance.csv").set_index("feature")
+    shap_test = pd.read_csv(out / "shap_test.csv").set_index("feature")
+    mc_i = mc.set_index("feature")
+    scores = {"PCE_ST": pce["ST"], "PCE_S1": pce["S1"], "EBM_total": ebm["total"],
+              "EBM_first": ebm["first"], "EBM_meanabs": ebm["mean_abs_contrib"],
+              "SHAP": shap_test["mean_abs_shap"], "MC_ST": mc_i["ST"], "MC_S1": mc_i["S1"]}
+    scores = {k: v.reindex(names) for k, v in scores.items()}
+    expl = pd.concat([pd.DataFrame({"dataset": name, "seed": seed, "method": k, "feature": v.index,
+                                    "score": v.to_numpy(),
+                                    "rank": v.rank(ascending=False, method="min").to_numpy()})
+                      for k, v in scores.items()], ignore_index=True)
+    expl.to_csv(out / "explanations.csv", index=False)
+
+    agree = rank_agreement(scores)
+    agree.insert(0, "seed", seed)
+    agree.insert(0, "dataset", name)
+    agree.to_csv(out / "agreement.csv", index=False)
+    agreement_matrix(agree, "kendall_tau_all").to_csv(out / "agreement_matrix_tau_all.csv")
+    agreement_matrix(agree, "kendall_tau_top").to_csv(out / "agreement_matrix_tau_top.csv")
+    key = ["PCE_ST", "EBM_total", "SHAP", "MC_ST"]
+    sel = agree[agree.method_a.isin(key) & agree.method_b.isin(key)]
+    print("  agreement between the main methods:")
+    print(sel[["method_a", "method_b", "kendall_tau_all", "kendall_tau_top", "top5_overlap", "top10_overlap"]]
+          .to_string(index=False, float_format=fmt))
+
+    # Combined fidelity table: teacher + selected PCE + selected EBM.
+    pg = pd.read_csv(out / "pce_grid.csv")
+    eg = pd.read_csv(out / "ebm_grid.csv")
+    p = pg[pg.selected].iloc[0]
+    e = eg[eg.selected].iloc[0]
+    tacc = accuracy_metrics(y[test], logits["test"])
+    metric_cols = [c for c in pg.columns if c.endswith(("_test", "_offman"))]
+    fid = pd.DataFrame([
+        {"dataset": name, "seed": seed, "model": "teacher", "config": "xgboost",
+         "accuracy_vs_y_test": tacc["accuracy"], "auc_vs_y_test": tacc["auc"]},
+        {"dataset": name, "seed": seed, "model": "PCE", "config": f"p={p.p} r={p.r} q={p.q} k={p.k}",
+         "n_terms": p.n_terms, "max_order": p.max_order, "cv_r2_pool": p.cv_r2_pool,
+         "fit_seconds": p.fit_seconds, **{c: p[c] for c in metric_cols}},
+        {"dataset": name, "seed": seed, "model": "EBM", "config": f"K={e.interactions}",
+         "n_terms": e.n_terms, "n_parameters": e.n_parameters, "max_order": e.max_order,
+         "cv_r2_pool": e.cv_r2_pool, "fit_seconds": e.fit_seconds, **{c: e[c] for c in metric_cols}},
+    ])
+    fid.to_csv(out / "fidelity.csv", index=False)
+    print("  fidelity (selected students):")
+    print(fid[["model", "config", "n_terms", "r2_logit_test", "rmse_logit_test", "label_agreement_test",
+               "mean_kl_test", "r2_logit_offman", "accuracy_vs_y_test", "auc_vs_y_test"]]
+          .to_string(index=False, float_format=fmt))
+    return mc_seconds
+
+
+def record_runtime(out, quick, name, seed, stage, seconds):
+    """Append/replace one row of runtime.csv in the stage folder."""
+    path = stage_dir(out, quick) / "runtime.csv"
+    df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["dataset", "seed", "stage", "seconds"])
+    df = df[df.stage != stage]
+    df = pd.concat([df, pd.DataFrame([{"dataset": name, "seed": seed, "stage": stage, "seconds": seconds}])])
+    df.to_csv(path, index=False)
+
+
+# ----------------------------------------------------------------------------------------
 def run(name, seeds, quick, stages, retrain_teacher):
     cfg = load_config(name)
     X, y, groups = load_dataset(name)
@@ -249,10 +410,14 @@ def run(name, seeds, quick, stages, retrain_teacher):
         out.mkdir(parents=True, exist_ok=True)
         if "teacher" in stages:
             stage_teacher(name, cfg, X, y, groups, seed, out, retrain=retrain_teacher)
-        if "pce" in stages:
-            t0 = time.perf_counter()
-            stage_pce(name, cfg, X, y, seed, out, quick)
-            print(f"  PCE stage time: {time.perf_counter() - t0:.1f} s")
+        for stage, fn in [("pce", stage_pce), ("ebm", stage_ebm), ("explain", stage_explain)]:
+            if stage in stages:
+                print(f"  --- stage {stage} ---")
+                t0 = time.perf_counter()
+                fn(name, cfg, X, y, seed, out, quick)
+                seconds = time.perf_counter() - t0
+                record_runtime(out, quick, name, seed, stage, seconds)
+                print(f"  {stage} stage time: {seconds:.1f} s")
 
 
 def main():

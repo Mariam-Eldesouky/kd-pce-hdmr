@@ -27,6 +27,15 @@ pce_quick:            # --quick: smaller grid
 
 ebm:
   interactions: [0, 5, 10, 20]
+  cv_folds: 5              # K chosen by CV R^2 on the pool
+  kwargs:                  # interpret defaults (outer_bags=14, max_bins=1024), except:
+    n_jobs: 3              # limit parallel processes: the 7.3 GB machine ran out of memory
+
+ebm_quick:
+  interactions: [0, 10]
+  cv_folds: 3
+  kwargs:
+    n_jobs: 3
 
 mc_sobol:
   N: 10000

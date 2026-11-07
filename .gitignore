@@ -14,3 +14,6 @@ data/
 results/*
 !results/summary_*.csv
 !results/.gitkeep
+
+# Run logs
+*.log

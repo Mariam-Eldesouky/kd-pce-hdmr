@@ -30,6 +30,17 @@ pce_quick:            # --quick: smaller grid
 
 ebm:
   interactions: [0, 5, 10, 20]
+  cv_folds: 3              # K chosen by CV R^2 on the pool
+  kwargs:
+    n_jobs: 2              # limit parallel processes: the 7.3 GB machine ran out of memory
+    outer_bags: 4          # default 14: 397.7 s vs 173.9 s per fit (K=0) for test R^2 0.757 vs 0.755
+
+ebm_quick:
+  interactions: [0, 10]
+  cv_folds: 3
+  kwargs:
+    n_jobs: 2
+    outer_bags: 4
 
 mc_sobol:
   N: 2000
