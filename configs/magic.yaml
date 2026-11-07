@@ -18,6 +18,13 @@ pce:
   screening_k: null        # no screening for 10 features
   max_terms: 20000
 
+pce_quick:            # --quick: smaller grid
+  p: [1, 2, 3]
+  r: [1, 2]
+  q: [1.0]
+  screening_k: null
+  max_terms: 20000
+
 ebm:
   interactions: [0, 5, 10, 20]
 

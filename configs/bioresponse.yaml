@@ -1,3 +1,4 @@
+# High-dimensional dataset (replaces Musk; see README / decisions log).
 name: bioresponse
 openml_id: 4134
 target: "target"
@@ -17,6 +18,14 @@ pce:
   q: [1.0, 0.75]
   screening_k: [10, 20, 30, 50]
   first_order_on_all_features: [true, false]
+  max_terms: 20000
+
+pce_quick:            # --quick: smaller grid
+  p: [1, 2, 3]
+  r: [1, 2]
+  q: [1.0]
+  screening_k: [10, 30]
+  first_order_on_all_features: [true]
   max_terms: 20000
 
 ebm:

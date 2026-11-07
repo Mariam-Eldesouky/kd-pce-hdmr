@@ -1,3 +1,5 @@
+# NOT USED in the final experiments: the Musk teacher did not generalise to unseen molecules
+# (test AUC 0.793 +- 0.101 over 5 seeds under a molecule-grouped split). Kept for the record.
 name: musk
 openml_id: 1116
 target: "class"
