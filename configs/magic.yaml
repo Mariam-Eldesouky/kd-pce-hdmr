@@ -1,0 +1,26 @@
+name: magic
+openml_id: 1120
+target: "class:"
+positive_label: "g"        # gamma (signal) = 1, hadron (background) = 0
+group_column: null         # no natural groups
+drop_columns: []
+
+teacher:
+  max_depth: [3, 5, 7]
+  learning_rate: [0.05, 0.1]
+  max_n_estimators: 2000
+  early_stopping_rounds: 50
+
+pce:
+  p: [1, 2, 3, 4]
+  r: [1, 2, 3]
+  q: [1.0, 0.75]
+  screening_k: null        # no screening for 10 features
+  max_terms: 20000
+
+ebm:
+  interactions: [0, 5, 10, 20]
+
+mc_sobol:
+  N: 10000
+  N_quick: 2000

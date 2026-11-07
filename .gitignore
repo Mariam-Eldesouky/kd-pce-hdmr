@@ -1,0 +1,16 @@
+# Private work log, never committed
+explanations/
+
+# Environment
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Downloaded data and caches
+data/
+
+# Results: per-seed outputs are ignored, final summaries are kept
+results/*
+!results/summary_*.csv
+!results/.gitkeep
