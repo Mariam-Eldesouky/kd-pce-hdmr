@@ -54,7 +54,7 @@ def _summary(name, kind, quick):
 def _save(fig, stem, quick):
     FIGURES.mkdir(exist_ok=True)
     path = FIGURES / f"{stem}{'_quick' if quick else ''}.pdf"
-    fig.savefig(path)
+    fig.savefig(path, metadata={"CreationDate": None})   # no timestamp: rebuilding gives an identical file
     fig.savefig(path.with_suffix(".png"), dpi=200)   # PNG copy for quick viewing; the report uses the PDF
     plt.close(fig)
     return path

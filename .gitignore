@@ -19,3 +19,4 @@ results/*
 *.log
 results/summary_*_quick*.csv
 logs/
+figures/*_quick.*

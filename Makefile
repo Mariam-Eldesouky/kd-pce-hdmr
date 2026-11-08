@@ -1,5 +1,5 @@
 # Usage: make install | make data | make test | make quick | make all | make figures
-# Long runs on Windows: scriptsun_full_windows.bat (one job per dataset/seed, resumable).
+# Long runs on Windows: scripts/run_full_windows.bat (one job per dataset/seed, resumable).
 # On Windows the venv interpreter lives in .venv/Scripts; on Linux/macOS override:
 #   make PY=.venv/bin/python test
 PY ?= .venv/Scripts/python

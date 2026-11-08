@@ -52,6 +52,8 @@ def aggregate(name, quick=False):
     rows = []
 
     tm = _collect(name, "teacher_metrics.csv")                      # teacher lives in seed<k>/, not quick/
+    if quick and len(tm):                                           # only seeds that have a quick run
+        tm = tm[tm.seed.isin([int(d.parent.name[4:]) for d in seed_dirs(name, quick) if d.exists()])]
     if len(tm):
         rows += _mean_std(tm[tm.subset == "test"], "subset", ["accuracy", "auc"], "teacher")
 
