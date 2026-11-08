@@ -90,9 +90,16 @@ def fig_tradeoff(datasets, quick=False):
                 ax.errorbar(eg[f"{xcol}_mean"], eg["r2_logit_test_mean"], yerr=_err(eg, "r2_logit_test"),
                             fmt=MARKERS["EBM"] + "-", color=COLORS["EBM"], ms=4, lw=1.2, elinewidth=0.6,
                             capsize=0, label="EBM (K = number of pairs)")
-                for _, r in eg.iterrows():
+                # If the EBM points sit almost on top of each other in x (Bioresponse: every K has ~1,800
+                # terms), label only the smallest and largest K so the labels do not collide.
+                x = eg[f"{xcol}_mean"]
+                crowded = x.max() / x.min() < 3
+                for pos, (_, r) in enumerate(eg.iterrows()):
+                    if crowded and 0 < pos < len(eg) - 1:
+                        continue
+                    above = pos == len(eg) - 1                   # largest K: label above the point
                     ax.annotate(f"K={int(r.interactions)}", (r[f"{xcol}_mean"], r["r2_logit_test_mean"]),
-                                xytext=(3, -8), textcoords="offset points", fontsize=6, color=INK2)
+                                xytext=(3, 5 if above else -8), textcoords="offset points", fontsize=6, color=INK2)
                 sel = eg[eg["times_selected"] > 0]
                 ax.scatter(sel[f"{xcol}_mean"], sel["r2_logit_test_mean"], s=40, facecolors="none",
                            edgecolors=INK, linewidths=0.8, zorder=5)
@@ -181,7 +188,7 @@ def fig_agreement(datasets, quick=False):
             continue
         im = ax.imshow(M.to_numpy(), cmap=DIVERGING, vmin=-1, vmax=1)
         for (r, c), v in np.ndenumerate(M.to_numpy()):
-            ax.text(c, r, f"{v:.2f}", ha="center", va="center", fontsize=5.5,
+            ax.text(c, r, f"{v:.2f}".replace("0.", "."), ha="center", va="center", fontsize=5.5,  # -0.28 -> -.28
                     color="white" if abs(v) > 0.6 else INK)
         labels = [METHOD_LABELS[m] for m in HEAT_METHODS]
         ax.set_xticks(range(len(labels)), labels, rotation=60, ha="right")
@@ -261,8 +268,8 @@ def fig_failures(datasets, quick=False, n_bins=8):
 # Figure 5: MAGIC - PCE analytic Sobol' vs teacher Monte Carlo Sobol'
 # ----------------------------------------------------------------------------------------
 def fig_sobol_check(name="magic", quick=False):
-    """PCE: mean over seeds +- std over seeds. Teacher MC: mean over seeds, bars = mean of the per-seed
-    95% bootstrap CI bounds (Monte Carlo uncertainty) widened by the std over seeds if that is larger."""
+    """Both methods: mean over seeds +- std over seeds (each seed has its own split, teacher and student).
+    The per-seed 95% bootstrap CIs of the MC estimates are reported in the text, not drawn here."""
     pce, mc = [], []
     for d in seed_dirs(name, quick):
         if (d / "pce_sobol.csv").exists() and (d / "teacher_mc_sobol.csv").exists():
@@ -276,12 +283,10 @@ def fig_sobol_check(name="magic", quick=False):
     y = np.arange(len(order))
     for ax, idx, title in [(axes[0], "S1", "first-order $S_i$"), (axes[1], "ST", "total effect $S_{T,i}$")]:
         pm, ps = P.groupby(level=0)[idx].mean()[order], P.groupby(level=0)[idx].std().fillna(0)[order]
-        mm = M.groupby(level=0)[idx].mean()[order]
-        lo = np.maximum(mm - M.groupby(level=0)[f"{idx}_lo"].mean()[order], M.groupby(level=0)[idx].std().fillna(0)[order])
-        hi = np.maximum(M.groupby(level=0)[f"{idx}_hi"].mean()[order] - mm, M.groupby(level=0)[idx].std().fillna(0)[order])
-        ax.errorbar(mm, y + 0.15, xerr=[lo, hi], fmt=MARKERS["MC"], color=COLORS["MC"], ms=5,
+        mm, ms_ = M.groupby(level=0)[idx].mean()[order], M.groupby(level=0)[idx].std().fillna(0)[order]
+        ax.errorbar(mm, y + 0.15, xerr=ms_, fmt=MARKERS["MC"], color=COLORS["MC"], ms=5,
                     markeredgecolor=INK, markeredgewidth=0.4, elinewidth=0.8, capsize=0,
-                    label="teacher, Monte Carlo (95% CI)")
+                    label="teacher, Monte Carlo (± std over seeds)")
         ax.errorbar(pm, y - 0.15, xerr=ps, fmt=MARKERS["PCE"], color=COLORS["PCE"], ms=4, elinewidth=0.8,
                     capsize=0, label="PCE student, analytic (± std over seeds)")
         ax.set_yticks(y, order)

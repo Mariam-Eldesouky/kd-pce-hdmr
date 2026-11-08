@@ -1,0 +1,163 @@
+dataset,section,item,metric,mean,std,n_seeds
+magic,teacher,test,accuracy,0.8799158780231335,0.005095421195238002,5
+magic,teacher,test,auc,0.9341850882347155,0.005386924363770024,5
+magic,fidelity,EBM,accuracy_vs_y_test,0.8764458464773922,0.003020274787874856,5
+magic,fidelity,EBM,auc_vs_y_test,0.9303475869526621,0.005582186991875361,5
+magic,fidelity,EBM,n_terms,40.0,0.0,5
+magic,fidelity,EBM,max_order,2.0,0.0,5
+magic,fidelity,EBM,cv_r2_pool,0.9581170003681138,0.005964402400351204,5
+magic,fidelity,EBM,fit_seconds,327.89111051980944,90.47877138533191,5
+magic,fidelity,EBM,r2_logit_test,0.9597637370011218,0.005310171663491693,5
+magic,fidelity,EBM,rmse_logit_test,0.6785688886745957,0.10499050282259854,5
+magic,fidelity,EBM,label_agreement_test,0.9604626708727656,0.004108858876958895,5
+magic,fidelity,EBM,mean_kl_test,0.020588343736513852,0.00502528770728481,5
+magic,fidelity,EBM,r2_logit_offman,0.7367547867081451,0.02782516736581325,5
+magic,fidelity,EBM,rmse_logit_offman,1.587540461551764,0.20886883255091718,5
+magic,fidelity,EBM,label_agreement_offman,0.8612513144058885,0.009291278533137605,5
+magic,fidelity,EBM,mean_kl_offman,0.11763244357506719,0.015048119285141706,5
+magic,fidelity,EBM,n_parameters,133120.0,0.0,5
+magic,fidelity,PCE,accuracy_vs_y_test,0.8721345951629864,0.0036784582859540685,5
+magic,fidelity,PCE,auc_vs_y_test,0.9296117467315215,0.004472571453179088,5
+magic,fidelity,PCE,n_terms,345.8,16.49848477891228,5
+magic,fidelity,PCE,max_order,3.0,0.0,5
+magic,fidelity,PCE,cv_r2_pool,0.9417227204153822,0.007129640334784684,5
+magic,fidelity,PCE,fit_seconds,10.438162199780345,0.9769342495392951,5
+magic,fidelity,PCE,r2_logit_test,0.9418660081439413,0.007941175077012246,5
+magic,fidelity,PCE,rmse_logit_test,0.8152010681532686,0.12504674757090503,5
+magic,fidelity,PCE,label_agreement_test,0.952155625657203,0.0046022979495298376,5
+magic,fidelity,PCE,mean_kl_test,0.028994402707467427,0.00665837891961667,5
+magic,fidelity,PCE,r2_logit_offman,0.31718983662159755,0.1133666054024527,5
+magic,fidelity,PCE,rmse_logit_offman,2.5680507607452165,0.5041909132910621,5
+magic,fidelity,PCE,label_agreement_offman,0.7808096740273396,0.017269712815018125,5
+magic,fidelity,PCE,mean_kl_offman,0.27059552534199194,0.057084086759081346,5
+magic,fidelity,teacher,accuracy_vs_y_test,0.8799158780231335,0.005095421195238002,5
+magic,fidelity,teacher,auc_vs_y_test,0.9341850579167925,0.005386926447978861,5
+magic,selected_config,EBM,K=30,5.0,,5
+magic,selected_config,PCE,p=4 r=3 q=1.0 k=all,5.0,,5
+magic,agreement,EBM_first vs EBM_meanabs,kendall_tau_all,0.7777777777777777,0.07027283689263066,5
+magic,agreement,EBM_first vs EBM_meanabs,kendall_tau_top,0.7777777777777777,0.07027283689263066,5
+magic,agreement,EBM_first vs EBM_meanabs,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_first vs EBM_meanabs,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_first vs MC_S1,kendall_tau_all,0.7422222222222221,0.01987615979999812,5
+magic,agreement,EBM_first vs MC_S1,kendall_tau_top,0.7422222222222221,0.01987615979999812,5
+magic,agreement,EBM_first vs MC_S1,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_first vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_first vs MC_ST,kendall_tau_all,0.7422222222222221,0.05794846582402353,5
+magic,agreement,EBM_first vs MC_ST,kendall_tau_top,0.7422222222222221,0.05794846582402353,5
+magic,agreement,EBM_first vs MC_ST,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_first vs MC_ST,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_first vs SHAP,kendall_tau_all,0.7244444444444443,0.07302967433402215,5
+magic,agreement,EBM_first vs SHAP,kendall_tau_top,0.7244444444444443,0.07302967433402215,5
+magic,agreement,EBM_first vs SHAP,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_first vs SHAP,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_meanabs vs MC_S1,kendall_tau_all,0.6444444444444444,0.08314794192830981,5
+magic,agreement,EBM_meanabs vs MC_S1,kendall_tau_top,0.6444444444444444,0.08314794192830981,5
+magic,agreement,EBM_meanabs vs MC_S1,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,EBM_meanabs vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_meanabs vs MC_ST,kendall_tau_all,0.8222222222222222,0.054433105395181716,5
+magic,agreement,EBM_meanabs vs MC_ST,kendall_tau_top,0.8222222222222222,0.054433105395181716,5
+magic,agreement,EBM_meanabs vs MC_ST,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,EBM_meanabs vs MC_ST,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_meanabs vs SHAP,kendall_tau_all,0.7688888888888888,0.04868644955601472,5
+magic,agreement,EBM_meanabs vs SHAP,kendall_tau_top,0.7688888888888888,0.04868644955601472,5
+magic,agreement,EBM_meanabs vs SHAP,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,EBM_meanabs vs SHAP,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs EBM_first,kendall_tau_all,0.8933333333333332,0.03975231959999621,5
+magic,agreement,EBM_total vs EBM_first,kendall_tau_top,0.8933333333333332,0.03975231959999621,5
+magic,agreement,EBM_total vs EBM_first,top5_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs EBM_first,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs EBM_meanabs,kendall_tau_all,0.8844444444444444,0.0674033372804582,5
+magic,agreement,EBM_total vs EBM_meanabs,kendall_tau_top,0.8844444444444444,0.0674033372804582,5
+magic,agreement,EBM_total vs EBM_meanabs,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_total vs EBM_meanabs,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs MC_S1,kendall_tau_all,0.7066666666666666,0.08073734277593307,5
+magic,agreement,EBM_total vs MC_S1,kendall_tau_top,0.7066666666666666,0.08073734277593307,5
+magic,agreement,EBM_total vs MC_S1,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_total vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs MC_ST,kendall_tau_all,0.831111111111111,0.05794846582402356,5
+magic,agreement,EBM_total vs MC_ST,kendall_tau_top,0.831111111111111,0.05794846582402356,5
+magic,agreement,EBM_total vs MC_ST,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_total vs MC_ST,top10_overlap,1.0,0.0,5
+magic,agreement,EBM_total vs SHAP,kendall_tau_all,0.7777777777777777,0.07027283689263067,5
+magic,agreement,EBM_total vs SHAP,kendall_tau_top,0.7777777777777777,0.07027283689263067,5
+magic,agreement,EBM_total vs SHAP,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,EBM_total vs SHAP,top10_overlap,1.0,0.0,5
+magic,agreement,MC_ST vs MC_S1,kendall_tau_all,0.7866666666666665,0.12332832822676983,5
+magic,agreement,MC_ST vs MC_S1,kendall_tau_top,0.7866666666666665,0.12332832822676983,5
+magic,agreement,MC_ST vs MC_S1,top5_overlap,1.0,0.0,5
+magic,agreement,MC_ST vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs EBM_first,kendall_tau_all,0.5466666666666666,0.1487395602727245,5
+magic,agreement,PCE_S1 vs EBM_first,kendall_tau_top,0.5466666666666666,0.1487395602727245,5
+magic,agreement,PCE_S1 vs EBM_first,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,PCE_S1 vs EBM_first,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs EBM_meanabs,kendall_tau_all,0.591111111111111,0.11066577420434422,5
+magic,agreement,PCE_S1 vs EBM_meanabs,kendall_tau_top,0.591111111111111,0.11066577420434422,5
+magic,agreement,PCE_S1 vs EBM_meanabs,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,PCE_S1 vs EBM_meanabs,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs EBM_total,kendall_tau_all,0.5822222222222222,0.10231879496196744,5
+magic,agreement,PCE_S1 vs EBM_total,kendall_tau_top,0.5822222222222222,0.10231879496196744,5
+magic,agreement,PCE_S1 vs EBM_total,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,PCE_S1 vs EBM_total,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs MC_S1,kendall_tau_all,0.5555555555555555,0.17497795275581798,5
+magic,agreement,PCE_S1 vs MC_S1,kendall_tau_top,0.5555555555555555,0.17497795275581798,5
+magic,agreement,PCE_S1 vs MC_S1,top5_overlap,0.9199999999999999,0.1095445115010332,5
+magic,agreement,PCE_S1 vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs MC_ST,kendall_tau_all,0.6622222222222222,0.09737289911202948,5
+magic,agreement,PCE_S1 vs MC_ST,kendall_tau_top,0.6622222222222222,0.09737289911202948,5
+magic,agreement,PCE_S1 vs MC_ST,top5_overlap,0.9199999999999999,0.1095445115010332,5
+magic,agreement,PCE_S1 vs MC_ST,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_S1 vs SHAP,kendall_tau_all,0.6088888888888888,0.20463758992393485,5
+magic,agreement,PCE_S1 vs SHAP,kendall_tau_top,0.6088888888888888,0.20463758992393485,5
+magic,agreement,PCE_S1 vs SHAP,top5_overlap,0.9199999999999999,0.1095445115010332,5
+magic,agreement,PCE_S1 vs SHAP,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs EBM_first,kendall_tau_all,0.7066666666666667,0.06740333728045822,5
+magic,agreement,PCE_ST vs EBM_first,kendall_tau_top,0.7066666666666667,0.06740333728045822,5
+magic,agreement,PCE_ST vs EBM_first,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,PCE_ST vs EBM_first,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs EBM_meanabs,kendall_tau_all,0.8577777777777775,0.06592176432973917,5
+magic,agreement,PCE_ST vs EBM_meanabs,kendall_tau_top,0.8577777777777775,0.06592176432973917,5
+magic,agreement,PCE_ST vs EBM_meanabs,top5_overlap,0.8400000000000001,0.08944271909999156,5
+magic,agreement,PCE_ST vs EBM_meanabs,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs EBM_total,kendall_tau_all,0.8133333333333332,0.06592176432973919,5
+magic,agreement,PCE_ST vs EBM_total,kendall_tau_top,0.8133333333333332,0.06592176432973919,5
+magic,agreement,PCE_ST vs EBM_total,top5_overlap,0.8800000000000001,0.10954451150103317,5
+magic,agreement,PCE_ST vs EBM_total,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs MC_S1,kendall_tau_all,0.6799999999999999,0.07950463919999248,5
+magic,agreement,PCE_ST vs MC_S1,kendall_tau_top,0.6799999999999999,0.07950463919999248,5
+magic,agreement,PCE_ST vs MC_S1,top5_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs MC_ST,kendall_tau_all,0.8755555555555554,0.0659217643297392,5
+magic,agreement,PCE_ST vs MC_ST,kendall_tau_top,0.8755555555555554,0.0659217643297392,5
+magic,agreement,PCE_ST vs MC_ST,top5_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs MC_ST,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs PCE_S1,kendall_tau_all,0.6622222222222222,0.14263828031894416,5
+magic,agreement,PCE_ST vs PCE_S1,kendall_tau_top,0.6622222222222222,0.14263828031894416,5
+magic,agreement,PCE_ST vs PCE_S1,top5_overlap,0.9199999999999999,0.1095445115010332,5
+magic,agreement,PCE_ST vs PCE_S1,top10_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs SHAP,kendall_tau_all,0.8044444444444444,0.0743697801363623,5
+magic,agreement,PCE_ST vs SHAP,kendall_tau_top,0.8044444444444444,0.0743697801363623,5
+magic,agreement,PCE_ST vs SHAP,top5_overlap,1.0,0.0,5
+magic,agreement,PCE_ST vs SHAP,top10_overlap,1.0,0.0,5
+magic,agreement,SHAP vs MC_S1,kendall_tau_all,0.6799999999999999,0.09635325950523912,5
+magic,agreement,SHAP vs MC_S1,kendall_tau_top,0.6799999999999999,0.09635325950523912,5
+magic,agreement,SHAP vs MC_S1,top5_overlap,1.0,0.0,5
+magic,agreement,SHAP vs MC_S1,top10_overlap,1.0,0.0,5
+magic,agreement,SHAP vs MC_ST,kendall_tau_all,0.8044444444444443,0.06740333728045822,5
+magic,agreement,SHAP vs MC_ST,kendall_tau_top,0.8044444444444443,0.06740333728045822,5
+magic,agreement,SHAP vs MC_ST,top5_overlap,1.0,0.0,5
+magic,agreement,SHAP vs MC_ST,top10_overlap,1.0,0.0,5
+magic,pce_variance_check,offmanifold,D_analytic,7.864838215910494,1.6228400042680935,5
+magic,pce_variance_check,offmanifold,var_empirical,7.8406067914609165,1.5154072303844808,5
+magic,pce_variance_check,offmanifold,ratio_var_over_D,0.9988711921312105,0.015954246125510264,5
+magic,pce_variance_check,pool,D_analytic,7.864838215910494,1.6228400042680935,5
+magic,pce_variance_check,pool,var_empirical,10.646625171036598,1.9969344430894593,5
+magic,pce_variance_check,pool,ratio_var_over_D,1.358820512407975,0.06440814780920215,5
+magic,pce_variance_check,test,D_analytic,7.864838215910494,1.6228400042680935,5
+magic,pce_variance_check,test,var_empirical,10.682446092368888,1.8147630724868542,5
+magic,pce_variance_check,test,ratio_var_over_D,1.3669152844855146,0.08001331631822925,5
+magic,ebm_variance_check,test,ratio_sum_term_var_over_var_pred,0.9827874431871294,0.038394198057862636,5
+magic,runtime,ebm,seconds,3149.032411167398,165.48717084052834,3
+magic,runtime,explain,seconds,0.7897513201525725,0.21463495211150785,5
+magic,runtime,pce,seconds,26.87942160014063,1.61270427647548,4
+magic,grid_compute,pce,seconds,26.513776880334262,3.4132606000961303,5
+magic,grid_compute,ebm,seconds,3500.3949137796358,498.1629935108453,5

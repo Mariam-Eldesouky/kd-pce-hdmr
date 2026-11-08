@@ -422,6 +422,9 @@ def record_runtime(out, quick, name, seed, stage, seconds, resumed=False):
     resumed=True: the stage continued from a partial file, so `seconds` is only the remaining work."""
     path = stage_dir(out, quick) / "runtime.csv"
     df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["dataset", "seed", "stage", "seconds", "resumed"])
+    old = df[df.stage == stage]
+    if resumed and len(old) and not bool(old["resumed"].iloc[0]):
+        return                                         # keep the complete (non-resumed) measurement
     df = df[df.stage != stage]
     df = pd.concat([df, pd.DataFrame([{"dataset": name, "seed": seed, "stage": stage, "seconds": seconds, "resumed": resumed}])])
     df.to_csv(path, index=False)

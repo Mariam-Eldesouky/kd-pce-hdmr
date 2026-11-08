@@ -1,0 +1,167 @@
+dataset,section,item,metric,mean,std,n_seeds
+bioresponse,teacher,test,accuracy,0.7986684420772304,0.0077299202523035985,5
+bioresponse,teacher,test,auc,0.8842066167647562,0.008053479450659535,5
+bioresponse,fidelity,EBM,accuracy_vs_y_test,0.7699067909454061,0.01640034006679323,5
+bioresponse,fidelity,EBM,auc_vs_y_test,0.8421247357293868,0.014275378770724965,5
+bioresponse,fidelity,EBM,n_terms,1796.0,0.0,5
+bioresponse,fidelity,EBM,max_order,2.0,0.0,5
+bioresponse,fidelity,EBM,cv_r2_pool,0.6947241479127696,0.03518860296286876,5
+bioresponse,fidelity,EBM,fit_seconds,217.28650148000014,25.14816727651708,5
+bioresponse,fidelity,EBM,r2_logit_test,0.7432226411753742,0.03827616907213791,5
+bioresponse,fidelity,EBM,rmse_logit_test,1.3741182351454697,0.33952343764124115,5
+bioresponse,fidelity,EBM,label_agreement_test,0.8625832223701732,0.016045134840364343,5
+bioresponse,fidelity,EBM,mean_kl_test,0.11819477745138714,0.04287102340675399,5
+bioresponse,fidelity,EBM,r2_logit_offman,0.08803124368845008,0.06753960780206632,5
+bioresponse,fidelity,EBM,rmse_logit_offman,1.3538637950492036,0.28328027746568135,5
+bioresponse,fidelity,EBM,label_agreement_offman,0.6980026631158456,0.022388395342854087,5
+bioresponse,fidelity,EBM,mean_kl_offman,0.1661626759583351,0.05424419640707136,5
+bioresponse,fidelity,EBM,n_parameters,94583.8,21535.80689688687,5
+bioresponse,fidelity,PCE,accuracy_vs_y_test,0.7781624500665779,0.015257817854201081,5
+bioresponse,fidelity,PCE,auc_vs_y_test,0.8458059539454889,0.01074645314861422,5
+bioresponse,fidelity,PCE,n_terms,285.8,43.37856613582335,5
+bioresponse,fidelity,PCE,max_order,2.0,0.0,5
+bioresponse,fidelity,PCE,cv_r2_pool,0.7535941661788688,0.03453108576160129,5
+bioresponse,fidelity,PCE,fit_seconds,77.69509853999917,19.05901750895966,5
+bioresponse,fidelity,PCE,r2_logit_test,0.7742562244815138,0.026356346204052538,5
+bioresponse,fidelity,PCE,rmse_logit_test,1.2843643663048456,0.2842267980466005,5
+bioresponse,fidelity,PCE,label_agreement_test,0.8692410119840213,0.010874842604045407,5
+bioresponse,fidelity,PCE,mean_kl_test,0.10311150257810345,0.028597103785526278,5
+bioresponse,fidelity,PCE,r2_logit_offman,0.17795669564027156,0.11191792476637484,5
+bioresponse,fidelity,PCE,rmse_logit_offman,1.2680868467395663,0.1691659795825547,5
+bioresponse,fidelity,PCE,label_agreement_offman,0.7808255659121172,0.025657984450804364,5
+bioresponse,fidelity,PCE,mean_kl_offman,0.14293964564821218,0.025962211178173447,5
+bioresponse,fidelity,teacher,accuracy_vs_y_test,0.7986684420772303,0.0077299202523035985,5
+bioresponse,fidelity,teacher,auc_vs_y_test,0.8842066167647562,0.008053479450659535,5
+bioresponse,selected_config,EBM,K=20,5.0,,5
+bioresponse,selected_config,PCE,p=3 r=2 q=0.75 k=50,1.0,,5
+bioresponse,selected_config,PCE,p=2 r=2 q=1.0 k=50,1.0,,5
+bioresponse,selected_config,PCE,p=3 r=2 q=1.0 k=50,1.0,,5
+bioresponse,selected_config,PCE,p=4 r=2 q=0.75 k=50,1.0,,5
+bioresponse,selected_config,PCE,p=3 r=2 q=1.0 k=30,1.0,,5
+bioresponse,agreement,EBM_first vs EBM_meanabs,kendall_tau_all,0.7697500774777917,0.009501239594850679,5
+bioresponse,agreement,EBM_first vs EBM_meanabs,kendall_tau_top,0.13678143715963517,0.22249381402149343,5
+bioresponse,agreement,EBM_first vs EBM_meanabs,top5_overlap,0.64,0.21908902300206642,5
+bioresponse,agreement,EBM_first vs EBM_meanabs,top10_overlap,0.5599999999999999,0.15165750888103094,5
+bioresponse,agreement,EBM_first vs MC_S1,kendall_tau_all,0.07766371362135412,0.02261283690338624,5
+bioresponse,agreement,EBM_first vs MC_S1,kendall_tau_top,-0.3362102130237639,0.04493719096261618,5
+bioresponse,agreement,EBM_first vs MC_S1,top5_overlap,0.24000000000000005,0.0894427190999916,5
+bioresponse,agreement,EBM_first vs MC_S1,top10_overlap,0.14,0.05477225575051661,5
+bioresponse,agreement,EBM_first vs MC_ST,kendall_tau_all,0.34616736332606307,0.023070103763204022,5
+bioresponse,agreement,EBM_first vs MC_ST,kendall_tau_top,-0.37786644965566507,0.06757009882541903,5
+bioresponse,agreement,EBM_first vs MC_ST,top5_overlap,0.24000000000000005,0.0894427190999916,5
+bioresponse,agreement,EBM_first vs MC_ST,top10_overlap,0.12000000000000002,0.0447213595499958,5
+bioresponse,agreement,EBM_first vs SHAP,kendall_tau_all,0.34538475944681507,0.022240266038968087,5
+bioresponse,agreement,EBM_first vs SHAP,kendall_tau_top,-0.3671004631091509,0.04806297131037522,5
+bioresponse,agreement,EBM_first vs SHAP,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,EBM_first vs SHAP,top10_overlap,0.12000000000000002,0.04472135954999581,5
+bioresponse,agreement,EBM_meanabs vs MC_S1,kendall_tau_all,0.0840988165908812,0.026379808189035955,5
+bioresponse,agreement,EBM_meanabs vs MC_S1,kendall_tau_top,-0.3602141377024295,0.10498488457125381,5
+bioresponse,agreement,EBM_meanabs vs MC_S1,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,EBM_meanabs vs MC_S1,top10_overlap,0.16,0.08944271909999159,5
+bioresponse,agreement,EBM_meanabs vs MC_ST,kendall_tau_all,0.456144932576381,0.03228889968577153,5
+bioresponse,agreement,EBM_meanabs vs MC_ST,kendall_tau_top,-0.32682899359932627,0.07724924329468467,5
+bioresponse,agreement,EBM_meanabs vs MC_ST,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,EBM_meanabs vs MC_ST,top10_overlap,0.14,0.05477225575051662,5
+bioresponse,agreement,EBM_meanabs vs SHAP,kendall_tau_all,0.45456362268151873,0.03193481957777459,5
+bioresponse,agreement,EBM_meanabs vs SHAP,kendall_tau_top,-0.304937777210502,0.06647215711662623,5
+bioresponse,agreement,EBM_meanabs vs SHAP,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,EBM_meanabs vs SHAP,top10_overlap,0.16,0.08944271909999159,5
+bioresponse,agreement,EBM_total vs EBM_first,kendall_tau_all,0.9927133942202658,0.0013032241031162015,5
+bioresponse,agreement,EBM_total vs EBM_first,kendall_tau_top,0.7843229813664596,0.19711374207016563,5
+bioresponse,agreement,EBM_total vs EBM_first,top5_overlap,0.96,0.08944271909999157,5
+bioresponse,agreement,EBM_total vs EBM_first,top10_overlap,0.9199999999999999,0.130384048104053,5
+bioresponse,agreement,EBM_total vs EBM_meanabs,kendall_tau_all,0.7768216928525977,0.008652483478506078,5
+bioresponse,agreement,EBM_total vs EBM_meanabs,kendall_tau_top,0.32086609686609685,0.14956933102617687,5
+bioresponse,agreement,EBM_total vs EBM_meanabs,top5_overlap,0.64,0.21908902300206642,5
+bioresponse,agreement,EBM_total vs EBM_meanabs,top10_overlap,0.6399999999999999,0.08944271909999155,5
+bioresponse,agreement,EBM_total vs MC_S1,kendall_tau_all,0.07830858412476716,0.022289037943957764,5
+bioresponse,agreement,EBM_total vs MC_S1,kendall_tau_top,-0.3178707029922474,0.09748548394636222,5
+bioresponse,agreement,EBM_total vs MC_S1,top5_overlap,0.24000000000000005,0.0894427190999916,5
+bioresponse,agreement,EBM_total vs MC_S1,top10_overlap,0.18,0.0447213595499958,5
+bioresponse,agreement,EBM_total vs MC_ST,kendall_tau_all,0.35354433342603964,0.02243478185345736,5
+bioresponse,agreement,EBM_total vs MC_ST,kendall_tau_top,-0.3512129778167957,0.06786144609598045,5
+bioresponse,agreement,EBM_total vs MC_ST,top5_overlap,0.24000000000000005,0.0894427190999916,5
+bioresponse,agreement,EBM_total vs MC_ST,top10_overlap,0.12000000000000002,0.0447213595499958,5
+bioresponse,agreement,EBM_total vs SHAP,kendall_tau_all,0.3527704937087901,0.02152175072297049,5
+bioresponse,agreement,EBM_total vs SHAP,kendall_tau_top,-0.3443956480437792,0.06938130166224142,5
+bioresponse,agreement,EBM_total vs SHAP,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,EBM_total vs SHAP,top10_overlap,0.12000000000000002,0.04472135954999581,5
+bioresponse,agreement,MC_ST vs MC_S1,kendall_tau_all,0.15160837819397704,0.04316190383121825,5
+bioresponse,agreement,MC_ST vs MC_S1,kendall_tau_top,0.26661361626878866,0.07855691323472294,5
+bioresponse,agreement,MC_ST vs MC_S1,top5_overlap,0.72,0.10954451150103327,5
+bioresponse,agreement,MC_ST vs MC_S1,top10_overlap,0.6399999999999999,0.08944271909999156,5
+bioresponse,agreement,PCE_S1 vs EBM_first,kendall_tau_all,0.21282296869002906,0.03408332852118655,5
+bioresponse,agreement,PCE_S1 vs EBM_first,kendall_tau_top,-0.3286252660839269,0.08144249534321968,5
+bioresponse,agreement,PCE_S1 vs EBM_first,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,PCE_S1 vs EBM_first,top10_overlap,0.12000000000000002,0.04472135954999581,5
+bioresponse,agreement,PCE_S1 vs EBM_meanabs,kendall_tau_all,0.24130794425797292,0.03241596799410347,5
+bioresponse,agreement,PCE_S1 vs EBM_meanabs,kendall_tau_top,-0.34418029553877455,0.07173474538432607,5
+bioresponse,agreement,PCE_S1 vs EBM_meanabs,top5_overlap,0.2,0.0,5
+bioresponse,agreement,PCE_S1 vs EBM_meanabs,top10_overlap,0.16,0.05477225575051661,5
+bioresponse,agreement,PCE_S1 vs EBM_total,kendall_tau_all,0.2154860330695143,0.03165453731086722,5
+bioresponse,agreement,PCE_S1 vs EBM_total,kendall_tau_top,-0.3088537577175382,0.07253307489519155,5
+bioresponse,agreement,PCE_S1 vs EBM_total,top5_overlap,0.24000000000000005,0.08944271909999162,5
+bioresponse,agreement,PCE_S1 vs EBM_total,top10_overlap,0.12000000000000002,0.04472135954999581,5
+bioresponse,agreement,PCE_S1 vs MC_S1,kendall_tau_all,0.07517536300885146,0.030864714624384344,5
+bioresponse,agreement,PCE_S1 vs MC_S1,kendall_tau_top,-0.27740781821200067,0.07485034114033062,5
+bioresponse,agreement,PCE_S1 vs MC_S1,top5_overlap,0.36,0.08944271909999159,5
+bioresponse,agreement,PCE_S1 vs MC_S1,top10_overlap,0.22000000000000003,0.04472135954999579,5
+bioresponse,agreement,PCE_S1 vs MC_ST,kendall_tau_all,0.28541094119634486,0.03927826821702496,5
+bioresponse,agreement,PCE_S1 vs MC_ST,kendall_tau_top,-0.2952442394191996,0.09565825935817437,5
+bioresponse,agreement,PCE_S1 vs MC_ST,top5_overlap,0.36,0.08944271909999159,5
+bioresponse,agreement,PCE_S1 vs MC_ST,top10_overlap,0.24000000000000005,0.08944271909999159,5
+bioresponse,agreement,PCE_S1 vs SHAP,kendall_tau_all,0.2850475955502404,0.04056220913466532,5
+bioresponse,agreement,PCE_S1 vs SHAP,kendall_tau_top,-0.24550201084627288,0.11429627120111636,5
+bioresponse,agreement,PCE_S1 vs SHAP,top5_overlap,0.44000000000000006,0.16733200530681508,5
+bioresponse,agreement,PCE_S1 vs SHAP,top10_overlap,0.28,0.10954451150103324,5
+bioresponse,agreement,PCE_ST vs EBM_first,kendall_tau_all,0.24217236264415432,0.026078868729136086,5
+bioresponse,agreement,PCE_ST vs EBM_first,kendall_tau_top,-0.28293270688139976,0.10116198538090676,5
+bioresponse,agreement,PCE_ST vs EBM_first,top5_overlap,0.28,0.10954451150103324,5
+bioresponse,agreement,PCE_ST vs EBM_first,top10_overlap,0.2,0.07071067811865475,5
+bioresponse,agreement,PCE_ST vs EBM_meanabs,kendall_tau_all,0.27873474786787045,0.021066078857021,5
+bioresponse,agreement,PCE_ST vs EBM_meanabs,kendall_tau_top,-0.29767949181905945,0.08115341633793884,5
+bioresponse,agreement,PCE_ST vs EBM_meanabs,top5_overlap,0.2,0.0,5
+bioresponse,agreement,PCE_ST vs EBM_meanabs,top10_overlap,0.16,0.05477225575051661,5
+bioresponse,agreement,PCE_ST vs EBM_total,kendall_tau_all,0.24751432194144005,0.021980077477884323,5
+bioresponse,agreement,PCE_ST vs EBM_total,kendall_tau_top,-0.28145164013324026,0.08460271884516202,5
+bioresponse,agreement,PCE_ST vs EBM_total,top5_overlap,0.28,0.10954451150103324,5
+bioresponse,agreement,PCE_ST vs EBM_total,top10_overlap,0.2,0.0,5
+bioresponse,agreement,PCE_ST vs MC_S1,kendall_tau_all,0.13080213845661523,0.03665242181480787,5
+bioresponse,agreement,PCE_ST vs MC_S1,kendall_tau_top,-0.12030583875556256,0.10774932873596806,5
+bioresponse,agreement,PCE_ST vs MC_S1,top5_overlap,0.36,0.08944271909999159,5
+bioresponse,agreement,PCE_ST vs MC_S1,top10_overlap,0.36,0.1341640786499874,5
+bioresponse,agreement,PCE_ST vs MC_ST,kendall_tau_all,0.366299041715176,0.03038505738909967,5
+bioresponse,agreement,PCE_ST vs MC_ST,kendall_tau_top,-0.11964451698689531,0.12248794601391917,5
+bioresponse,agreement,PCE_ST vs MC_ST,top5_overlap,0.28,0.10954451150103324,5
+bioresponse,agreement,PCE_ST vs MC_ST,top10_overlap,0.32,0.10954451150103321,5
+bioresponse,agreement,PCE_ST vs PCE_S1,kendall_tau_all,0.8643918886267302,0.07262081553454192,5
+bioresponse,agreement,PCE_ST vs PCE_S1,kendall_tau_top,-0.032561701030191945,0.09769182952019047,5
+bioresponse,agreement,PCE_ST vs PCE_S1,top5_overlap,0.44000000000000006,0.2190890230020665,5
+bioresponse,agreement,PCE_ST vs PCE_S1,top10_overlap,0.38,0.13038404810405296,5
+bioresponse,agreement,PCE_ST vs SHAP,kendall_tau_all,0.36554136182124186,0.03130793842093329,5
+bioresponse,agreement,PCE_ST vs SHAP,kendall_tau_top,-0.060858614668403324,0.08368968267106201,5
+bioresponse,agreement,PCE_ST vs SHAP,top5_overlap,0.4,0.19999999999999998,5
+bioresponse,agreement,PCE_ST vs SHAP,top10_overlap,0.38,0.08366600265340757,5
+bioresponse,agreement,SHAP vs MC_S1,kendall_tau_all,0.15095273680611423,0.044382751860330735,5
+bioresponse,agreement,SHAP vs MC_S1,kendall_tau_top,0.21026303091709098,0.12592667504092947,5
+bioresponse,agreement,SHAP vs MC_S1,top5_overlap,0.64,0.16733200530681513,5
+bioresponse,agreement,SHAP vs MC_S1,top10_overlap,0.58,0.130384048104053,5
+bioresponse,agreement,SHAP vs MC_ST,kendall_tau_all,0.9515976106250434,0.00572317964111797,5
+bioresponse,agreement,SHAP vs MC_ST,kendall_tau_top,0.42045039018952063,0.1122812066713881,5
+bioresponse,agreement,SHAP vs MC_ST,top5_overlap,0.76,0.08944271909999163,5
+bioresponse,agreement,SHAP vs MC_ST,top10_overlap,0.72,0.1643167672515498,5
+bioresponse,pce_variance_check,offmanifold,D_analytic,2.799069804076352,0.812260644565801,5
+bioresponse,pce_variance_check,offmanifold,var_empirical,2.299573330960622,0.657912325775636,5
+bioresponse,pce_variance_check,offmanifold,ratio_var_over_D,0.8278377484076481,0.07748251614311404,5
+bioresponse,pce_variance_check,pool,D_analytic,2.799069804076352,0.812260644565801,5
+bioresponse,pce_variance_check,pool,var_empirical,5.5872905421641414,1.596470251633553,5
+bioresponse,pce_variance_check,pool,ratio_var_over_D,2.013450308160729,0.24827553054715965,5
+bioresponse,pce_variance_check,test,D_analytic,2.799069804076352,0.812260644565801,5
+bioresponse,pce_variance_check,test,var_empirical,5.4692371267792375,1.5934130246876852,5
+bioresponse,pce_variance_check,test,ratio_var_over_D,1.9676091545848824,0.2437541278862948,5
+bioresponse,ebm_variance_check,test,ratio_sum_term_var_over_var_pred,0.23419553024737425,0.030624630614100104,5
+bioresponse,runtime,ebm,seconds,3005.2931517000006,227.3976911054226,5
+bioresponse,runtime,explain,seconds,34.14558944000019,2.876835835866788,5
+bioresponse,runtime,pce,seconds,1952.3885750599998,46.47659130847907,5
+bioresponse,grid_compute,pce,seconds,1935.8868565400103,45.56693592095866,5
+bioresponse,grid_compute,ebm,seconds,3003.2699797000023,227.2025201966056,5

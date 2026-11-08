@@ -80,9 +80,18 @@ def aggregate(name, quick=False):
         ev["item"] = "test"
         rows += _mean_std(ev, "item", ["ratio_sum_term_var_over_var_pred"], "ebm_variance_check")
 
+    # Wall-clock per stage: only seeds where the stage ran in one go (a resumed run measures only the rest).
     rt = _collect(name, "runtime.csv", quick)
     if len(rt):
-        rows += _mean_std(rt, "stage", ["seconds"], "runtime")
+        rows += _mean_std(rt[~rt["resumed"].astype(bool)], "stage", ["seconds"], "runtime")
+    # Compute time summed over the grid rows (fit + CV per configuration); unaffected by resuming.
+    for stage, fname, cols in [("pce", "pce_grid.csv", ["fit_seconds"]),
+                               ("ebm", "ebm_grid.csv", ["fit_seconds", "cv_seconds"])]:
+        g = _collect(name, fname, quick)
+        if len(g):
+            per_seed = g.groupby("seed")[cols].sum().sum(axis=1).rename("seconds").reset_index()
+            per_seed["stage"] = stage
+            rows += _mean_std(per_seed, "stage", ["seconds"], "grid_compute")
 
     summary = pd.DataFrame(rows)
     summary.insert(0, "dataset", name)

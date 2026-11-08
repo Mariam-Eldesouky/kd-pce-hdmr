@@ -18,3 +18,4 @@ results/*
 # Run logs
 *.log
 results/summary_*_quick*.csv
+logs/
