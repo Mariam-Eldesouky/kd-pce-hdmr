@@ -117,10 +117,16 @@ def pce_grid(cfg_pce):
     Duplicates: q < 1 changes nothing when r = 1 or p = 1 (a single degree k has q-norm k);
     with r = 1, the screening k only matters if first-order terms are restricted to the k features.
     """
-    ks = cfg_pce.get("screening_k") or [None]
-    foas = cfg_pce.get("first_order_on_all_features") or [True]
+    # The main grid is a full product. `extra_grids` adds smaller products (e.g. one larger p) that
+    # override some keys and inherit the rest from the main grid.
+    blocks = [{}] + list(cfg_pce.get("extra_grids") or [])
+    combos = []
+    for b in blocks:
+        c = {**cfg_pce, **b}
+        combos += itertools.product(c["p"], c["r"], c["q"], c.get("screening_k") or [None],
+                                    c.get("first_order_on_all_features") or [True])
     out, seen = [], set()
-    for p, r, q, k, foa in itertools.product(cfg_pce["p"], cfg_pce["r"], cfg_pce["q"], ks, foas):
+    for p, r, q, k, foa in combos:
         if r > p:
             continue
         if q < 1.0 and (r == 1 or p == 1):
@@ -410,6 +416,15 @@ def stage_explain(name, cfg, X, y, seed, out, quick):
          "cv_r2_pool": e.cv_r2_pool, "fit_seconds": e.fit_seconds, **{c: e[c] for c in metric_cols}},
     ])
     fid.to_csv(out / "fidelity.csv", index=False)
+
+    # Teacher logit variance on the test set and on its column-permuted (off-manifold) copy.
+    # R^2 = 1 - MSE / Var(teacher logit), so a smaller variance off-manifold lowers R^2 at the same RMSE.
+    tp = np.load(out / "pce_predictions.npz")
+    tv = pd.DataFrame([{"dataset": name, "seed": seed, "data": d, "var_teacher_logit": float(np.var(tp[f"teacher_{k}"])),
+                        "sd_teacher_logit": float(np.std(tp[f"teacher_{k}"]))}
+                       for d, k in [("test", "test"), ("offmanifold", "offman")]])
+    tv.to_csv(out / "teacher_logit_variance.csv", index=False)
+    print("  teacher logit variance:", ", ".join(f"{r.data} {r.var_teacher_logit:.3f}" for r in tv.itertuples()))
     print("  fidelity (selected students):")
     print(fid[["model", "config", "n_terms", "r2_logit_test", "rmse_logit_test", "label_agreement_test",
                "mean_kl_test", "r2_logit_offman", "accuracy_vs_y_test", "auc_vs_y_test"]]

@@ -1,0 +1,4 @@
+type,n_features_full_data
+binary,835
+low_cardinality_3_10,566
+continuous_gt10,375

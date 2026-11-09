@@ -19,6 +19,8 @@ pce:
   screening_k: [10, 20, 30, 50]
   first_order_on_all_features: [true, false]
   max_terms: 20000
+  extra_grids:             # added after the 5-seed run: k=50 (grid edge) was selected on 4 of 5 seeds
+    - {p: [2, 3], r: [2], screening_k: [100]}
 
 pce_quick:            # --quick: smaller grid
   p: [1, 2, 3]
@@ -29,6 +31,9 @@ pce_quick:            # --quick: smaller grid
   max_terms: 20000
 
 ebm:
+  primary_importance: mean_abs   # EBM explanation used in figures/tables: mean |contribution|, because
+                           # sum Var(terms) / Var(prediction) = 0.23 +- 0.03 here: variance shares are
+                           # not a decomposition (strongly co-varying terms)
   interactions: [0, 5, 10, 20]
   cv_folds: 3              # K chosen by CV R^2 on the pool
   kwargs:

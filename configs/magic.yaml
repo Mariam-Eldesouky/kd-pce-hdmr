@@ -17,6 +17,8 @@ pce:
   q: [1.0, 0.75]
   screening_k: null        # no screening for 10 features
   max_terms: 20000
+  extra_grids:             # added after the 5-seed run: p=4, r=3 (grid edge) was selected on every seed
+    - {p: [5], r: [1, 2, 3]}
 
 pce_quick:            # --quick: smaller grid
   p: [1, 2, 3]
@@ -26,7 +28,10 @@ pce_quick:            # --quick: smaller grid
   max_terms: 20000
 
 ebm:
-  interactions: [0, 5, 10, 20, 30]   # 30 added: at K = 20 (grid edge) CV R^2 was still rising
+  primary_importance: total   # EBM explanation used in figures/tables: variance share (terms ~ uncorrelated here:
+                           # sum Var(terms) / Var(prediction) = 0.98 +- 0.04 over 5 seeds)
+  interactions: [0, 5, 10, 20, 30]   # 30 added: at K = 20 (grid edge) CV R^2 was still rising.
+                           # K = 30 is again the edge; not extended further (cost; see README limitations)
   cv_folds: 5              # K chosen by CV R^2 on the pool
   kwargs:                  # interpret defaults (outer_bags=14, max_bins=1024), except:
     n_jobs: 3              # limit parallel processes: the 7.3 GB machine ran out of memory

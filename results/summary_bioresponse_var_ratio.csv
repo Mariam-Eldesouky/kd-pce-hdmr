@@ -1,0 +1,16 @@
+dataset,metric,mean,std,n_seeds
+bioresponse,n_binary_pool,894.8,11.861703081766969,5
+bioresponse,n_low_card_pool,627.2,7.5960516059331775,5
+bioresponse,n_continuous_pool,236.8,8.786353054595518,5
+bioresponse,n_constant_pool,17.2,5.215361924162119,5
+bioresponse,mean_E_psi1sq_binary,0.25217742211509553,0.006897569259592875,5
+bioresponse,mean_E_psi1sq_low_card,0.14689261455832361,0.007079093047843926,5
+bioresponse,mean_E_psi1sq_continuous,0.6761679325211724,0.009415260191827785,5
+bioresponse,share_D_terms_with_binary,0.658844461672329,0.05706179922921844,5
+bioresponse,share_D_terms_with_low_card,0.12619420663718436,0.05333801032259782,5
+bioresponse,share_D_continuous_only,0.23377458004024348,0.05004294048017591,5
+bioresponse,mean_m_selected_terms_binary,0.7197842403962985,0.0162772647517426,5
+bioresponse,mean_m_selected_terms_continuous_only,0.8995174887078321,0.012780703881508673,5
+bioresponse,predicted_ratio_from_moments,0.7864655745285495,0.032778805558409306,5
+bioresponse,observed_ratio_offmanifold,0.8861161256491765,0.18581847819727873,5
+bioresponse,observed_ratio_pool,2.2462553333574475,0.5942392776940816,5

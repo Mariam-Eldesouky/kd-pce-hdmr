@@ -80,7 +80,8 @@ The first run therefore needs internet; later runs do not.
 |---|---|
 | `make test` | 25 unit tests: leakage, Legendre orthonormality, PCE Sobol' and MC Sobol' on Ishigami |
 | `make quick` | seed 0, small grids, fewer Monte Carlo samples, both datasets, then `figures/*_quick.*` |
-| `make all` | the full study: seeds 0–4, full grids, both datasets, then the figures |
+| `make all` | the full study: seeds 0–4, full grids, both datasets, then `make analysis`, then the figures |
+| `make analysis` | Bioresponse follow-ups on existing 5-seed results: screening ablation (`scripts/ablation_screening.py`) and the Var/D diagnosis (`scripts/diagnose_var_ratio.py`) |
 | `make figures` | rebuild the summaries and figures from existing results |
 
 Without make:
@@ -122,13 +123,21 @@ Jobs ran one at a time; EBM parallelism is limited in the configs (`n_jobs`) to 
   (all git-ignored).
 - `make all`: about **11.5 hours** for 2 datasets × 5 seeds. That is the sum of the per-seed times: MAGIC about 51–56 min
   per seed, and Bioresponse 1 h 20 min – 1 h 33 min per seed (7 h 12 min for all five, from the batch-file log).
-  The run was interrupted once by a Windows Update restart and resumed. Grid compute time per seed, from
-  `results/summary_*.csv`:
+  The run was interrupted once by a Windows Update restart and resumed. These wall times are from the original
+  grids; the PCE grids were extended afterwards (section 10).
+- **Extended PCE grid** (the PCE stage plus the explain stage only, reusing the existing grid rows): about 1.5 min
+  per seed for MAGIC, and 15–18 min per seed for Bioresponse (about 1 h 25 min for all five, from the log timestamps).
+  A fresh `make all` therefore takes roughly 0.8 h longer than the figure above.
+- `make analysis` (Bioresponse screening ablation and Var/D diagnosis): about 3 min per seed for the ablation.
+  The first-order LASSO screening fit alone takes about 1 min.
+
+Grid compute time per seed, from `results/summary_*.csv`. It is the summed fit and CV time over the whole grid,
+including the extension:
 
 | dataset | PCE grid compute (s) | EBM grid compute (s) | explain stage (s) |
 |---|---|---|---|
-| MAGIC | 27 ± 3 | 3500 ± 498 | 0.8 ± 0.2 |
-| Bioresponse | 1936 ± 46 | 3003 ± 227 | 34.1 ± 2.9 |
+| MAGIC | 79 ± 5 | 3500 ± 498 | 0.8 ± 0.1 |
+| Bioresponse | 2769 ± 68 | 3003 ± 227 | 37.7 ± 2.5 |
 
 Training a teacher (5-fold CV over 6 settings, then a refit) took about 30–35 s per seed for MAGIC and about
 3–4 min per seed for Bioresponse.
@@ -141,10 +150,10 @@ Each is written as PDF and PNG to `figures/`.
 | figure | function in `plots.py` | shows | data |
 |---|---|---|---|
 | `fig1_tradeoff` | `fig_tradeoff` | fidelity (test R² on teacher logits) vs active terms and vs learned parameters, every grid configuration | `summary_*_pce_grid.csv`, `summary_*_ebm_grid.csv` |
-| `fig2_rankings` | `fig_rankings` | top-10 features by teacher MC S_T: shares of importance for PCE S_T, EBM total, SHAP, teacher MC S_T | `summary_*_explanations.csv` |
+| `fig2_rankings` | `fig_rankings` | top-10 features by teacher MC S_T. Each method's scores are **normalised to sum to 1** over all features (PCE S_T, primary EBM importance, SHAP, teacher MC S_T) | `summary_*_explanations.csv` |
 | `fig3_agreement` | `fig_agreement` | Kendall τ between all explanation methods (all features; for Bioresponse also the top-20 union) | `seed*/agreement_matrix_tau_*.csv` |
-| `fig4_failures` | `fig_failures` | top: student error vs teacher confidence; bottom: test vs off-manifold fidelity | `seed*/*_predictions.npz`, `summary_*.csv` |
-| `fig5_sobol_check_magic` | `fig_sobol_check` | MAGIC: analytic PCE S_i, S_T,i vs teacher Monte Carlo estimates | `seed*/pce_sobol.csv`, `seed*/teacher_mc_sobol.csv` |
+| `fig4_failures` | `fig_failures` | row 1: student error vs teacher confidence; rows 2–3: test vs off-manifold fidelity as R² and as RMSE | `seed*/*_predictions.npz`, `summary_*.csv` |
+| `fig5_sobol_check_magic` | `fig_sobol_check` | MAGIC: analytic PCE S_i, S_T,i vs teacher Monte Carlo estimates (**raw** indices, not normalised) | `seed*/pce_sobol.csv`, `seed*/teacher_mc_sobol.csv` |
 
 ## 8. Results (5 seeds)
 
@@ -152,29 +161,66 @@ The tables below are printed by `python scripts/results_table.py` from `results/
 (mean ± std over seeds). *Off-manifold* is the test set with each column permuted independently, which breaks
 the dependence between features.
 
-| dataset | model | selected config (seeds) | active terms | test R² (logit) | label agreement | off-manifold R² | accuracy vs y | AUC vs y |
-|---|---|---|---|---|---|---|---|---|
-| MAGIC | teacher (XGBoost) | – | – | – | – | – | 0.880 ± 0.005 | 0.934 ± 0.005 |
-| MAGIC | PCE student | p=4 r=3 q=1.0 k=all (5/5) | 345.8 ± 16.5 | 0.942 ± 0.008 | 0.952 ± 0.005 | 0.317 ± 0.113 | 0.872 ± 0.004 | 0.930 ± 0.004 |
-| MAGIC | EBM student | K=30 (5/5) | 40.0 ± 0.0 | 0.960 ± 0.005 | 0.960 ± 0.004 | 0.737 ± 0.028 | 0.876 ± 0.003 | 0.930 ± 0.006 |
-| Bioresponse | teacher (XGBoost) | – | – | – | – | – | 0.799 ± 0.008 | 0.884 ± 0.008 |
-| Bioresponse | PCE student | p=3 r=2 q=0.75 k=50 (1/5); p=2 r=2 q=1.0 k=50 (1/5); p=3 r=2 q=1.0 k=50 (1/5); p=4 r=2 q=0.75 k=50 (1/5); p=3 r=2 q=1.0 k=30 (1/5) | 285.8 ± 43.4 | 0.774 ± 0.026 | 0.869 ± 0.011 | 0.178 ± 0.112 | 0.778 ± 0.015 | 0.846 ± 0.011 |
-| Bioresponse | EBM student | K=20 (5/5) | 1796.0 ± 0.0 | 0.743 ± 0.038 | 0.863 ± 0.016 | 0.088 ± 0.068 | 0.770 ± 0.016 | 0.842 ± 0.014 |
+### Fidelity
+
+| dataset | model | selected config (seeds) | active terms | test R² | test RMSE | label agreement | off-manifold R² | off-manifold RMSE | accuracy vs y | AUC vs y |
+|---|---|---|---|---|---|---|---|---|---|---|
+| MAGIC | teacher (XGBoost) | – | – | – | – | – | – | – | 0.880 ± 0.005 | 0.934 ± 0.005 |
+| MAGIC | PCE student | p=5 r=3 q=1.0 k=all (5/5) | 491.2 ± 28.0 | 0.945 ± 0.007 | 0.794 ± 0.121 | 0.954 ± 0.003 | 0.271 ± 0.116 | 2.654 ± 0.517 | 0.873 ± 0.005 | 0.930 ± 0.005 |
+| MAGIC | EBM student | K=30 (5/5) | 40.0 ± 0.0 | 0.960 ± 0.005 | 0.679 ± 0.105 | 0.960 ± 0.004 | 0.737 ± 0.028 | 1.588 ± 0.209 | 0.876 ± 0.003 | 0.930 ± 0.006 |
+| Bioresponse | teacher (XGBoost) | – | – | – | – | – | – | – | 0.799 ± 0.008 | 0.884 ± 0.008 |
+| Bioresponse | PCE student | p=3 r=2 q=1.0 k=100 (2/5); p=2 r=2 q=1.0 k=50 (1/5); p=3 r=2 q=0.75 k=100 (1/5); p=3 r=2 q=1.0 k=30 (1/5) | 346.6 ± 57.5 | 0.774 ± 0.016 | 1.284 ± 0.263 | 0.868 ± 0.009 | 0.136 ± 0.091 | 1.303 ± 0.183 | 0.780 ± 0.016 | 0.853 ± 0.013 |
+| Bioresponse | EBM student | K=20 (5/5) | 1796.0 ± 0.0 | 0.743 ± 0.038 | 1.374 ± 0.340 | 0.863 ± 0.016 | 0.088 ± 0.068 | 1.354 ± 0.283 | 0.770 ± 0.016 | 0.842 ± 0.014 |
+
+R² and RMSE are on teacher logits; mean ± std over seeds (number of seeds: MAGIC 5, Bioresponse 5).
+
+### Teacher logit variance (R² = 1 − MSE / Var(teacher logit))
+
+| dataset | Var(teacher logit), test | Var(teacher logit), off-manifold |
+|---|---|---|
+| MAGIC | 11.45 ± 2.06 | 9.74 ± 2.56 |
+| Bioresponse | 7.49 ± 2.77 | 2.06 ± 0.77 |
+
+### Agreement of explanations
 
 | dataset | pair | Kendall τ (all features) | Kendall τ (top-20 union) | top-5 overlap | top-10 overlap |
 |---|---|---|---|---|---|
-| MAGIC | PCE_ST vs MC_ST | 0.88 ± 0.07 | 0.88 ± 0.07 | 1.00 ± 0.00 | 1.00 ± 0.00 |
-| MAGIC | EBM_total vs MC_ST | 0.83 ± 0.06 | 0.83 ± 0.06 | 0.88 ± 0.11 | 1.00 ± 0.00 |
-| MAGIC | SHAP vs MC_ST | 0.80 ± 0.07 | 0.80 ± 0.07 | 1.00 ± 0.00 | 1.00 ± 0.00 |
-| MAGIC | PCE_ST vs SHAP | 0.80 ± 0.07 | 0.80 ± 0.07 | 1.00 ± 0.00 | 1.00 ± 0.00 |
-| MAGIC | EBM_total vs SHAP | 0.78 ± 0.07 | 0.78 ± 0.07 | 0.88 ± 0.11 | 1.00 ± 0.00 |
-| MAGIC | PCE_ST vs EBM_total | 0.81 ± 0.07 | 0.81 ± 0.07 | 0.88 ± 0.11 | 1.00 ± 0.00 |
-| Bioresponse | PCE_ST vs MC_ST | 0.37 ± 0.03 | -0.12 ± 0.12 | 0.28 ± 0.11 | 0.32 ± 0.11 |
-| Bioresponse | EBM_total vs MC_ST | 0.35 ± 0.02 | -0.35 ± 0.07 | 0.24 ± 0.09 | 0.12 ± 0.04 |
-| Bioresponse | SHAP vs MC_ST | 0.95 ± 0.01 | 0.42 ± 0.11 | 0.76 ± 0.09 | 0.72 ± 0.16 |
-| Bioresponse | PCE_ST vs SHAP | 0.37 ± 0.03 | -0.06 ± 0.08 | 0.40 ± 0.20 | 0.38 ± 0.08 |
-| Bioresponse | EBM_total vs SHAP | 0.35 ± 0.02 | -0.34 ± 0.07 | 0.24 ± 0.09 | 0.12 ± 0.04 |
-| Bioresponse | PCE_ST vs EBM_total | 0.25 ± 0.02 | -0.28 ± 0.08 | 0.28 ± 0.11 | 0.20 ± 0.00 |
+| MAGIC | PCE S_T vs Teacher MC S_T | 0.88 ± 0.08 | 0.88 ± 0.08 | 1.00 ± 0.00 | 1.00 ± 0.00 |
+| MAGIC | EBM total vs Teacher MC S_T | 0.83 ± 0.06 | 0.83 ± 0.06 | 0.88 ± 0.11 | 1.00 ± 0.00 |
+| MAGIC | SHAP vs Teacher MC S_T | 0.80 ± 0.07 | 0.80 ± 0.07 | 1.00 ± 0.00 | 1.00 ± 0.00 |
+| MAGIC | PCE S_T vs SHAP | 0.77 ± 0.09 | 0.77 ± 0.09 | 1.00 ± 0.00 | 1.00 ± 0.00 |
+| MAGIC | EBM total vs SHAP | 0.78 ± 0.07 | 0.78 ± 0.07 | 0.88 ± 0.11 | 1.00 ± 0.00 |
+| MAGIC | PCE S_T vs EBM total | 0.81 ± 0.07 | 0.81 ± 0.07 | 0.88 ± 0.11 | 1.00 ± 0.00 |
+| Bioresponse | PCE S_T vs Teacher MC S_T | 0.39 ± 0.05 | -0.17 ± 0.18 | 0.28 ± 0.11 | 0.30 ± 0.12 |
+| Bioresponse | EBM mean \|contrib.\| vs Teacher MC S_T | 0.46 ± 0.03 | -0.33 ± 0.08 | 0.24 ± 0.09 | 0.14 ± 0.05 |
+| Bioresponse | SHAP vs Teacher MC S_T | 0.95 ± 0.01 | 0.42 ± 0.11 | 0.76 ± 0.09 | 0.72 ± 0.16 |
+| Bioresponse | PCE S_T vs SHAP | 0.39 ± 0.05 | -0.16 ± 0.18 | 0.36 ± 0.17 | 0.30 ± 0.12 |
+| Bioresponse | EBM mean \|contrib.\| vs SHAP | 0.45 ± 0.03 | -0.30 ± 0.07 | 0.24 ± 0.09 | 0.16 ± 0.09 |
+| Bioresponse | PCE S_T vs EBM mean \|contrib.\| | 0.28 ± 0.03 | -0.34 ± 0.09 | 0.20 ± 0.00 | 0.14 ± 0.05 |
+
+### Ablation (Bioresponse): screening of interaction features
+
+| screening | CV R² (pool) | test R² | test RMSE | off-manifold R² | off-manifold RMSE | τ top-20 vs SHAP | top-10 vs SHAP | τ top-20 vs MC S_T | top-10 vs MC S_T |
+|---|---|---|---|---|---|---|---|---|---|
+| teacher SHAP on the pool (main study) | 0.758 ± 0.033 | 0.774 ± 0.016 | 1.284 ± 0.263 | 0.136 ± 0.091 | 1.303 ± 0.183 | -0.16 ± 0.18 | 0.30 ± 0.12 | -0.17 ± 0.18 | 0.30 ± 0.12 |
+| first-order LASSO PCE on the pool | 0.743 ± 0.027 | 0.765 ± 0.011 | 1.307 ± 0.257 | 0.144 ± 0.095 | 1.311 ± 0.288 | -0.24 ± 0.15 | 0.24 ± 0.11 | -0.26 ± 0.15 | 0.24 ± 0.11 |
+
+The two screened sets share 25.8 ± 13.6 features.
+
+### Bioresponse: feature types and the off-manifold Var/D of the PCE
+
+| quantity | value |
+|---|---|
+| binary features (2 values), full data | 835 |
+| 3–10 distinct values, full data | 566 |
+| more than 10 distinct values, full data | 375 |
+| constant, full data | 0 |
+| E[ψ₁²] on the pool, binary features | 0.252 ± 0.007 |
+| E[ψ₁²] on the pool, 3–10 values | 0.147 ± 0.007 |
+| E[ψ₁²] on the pool, > 10 values | 0.676 ± 0.009 |
+| share of D in terms with a binary feature | 0.659 ± 0.057 |
+| predicted Var/D from the pool moments | 0.786 ± 0.033 |
+| observed Var/D off-manifold | 0.886 ± 0.186 |
 
 How to read these tables:
 - **MAGIC has only 10 features**, so a top-10 overlap of 1.00 is trivial, and the top-20 union contains every feature
@@ -183,6 +229,32 @@ How to read these tables:
   the same features in reverse order. Each method's top features get low ranks from the other, so τ is negative by
   construction (two methods with disjoint top-20 sets give τ ≈ −0.6).
 - **For the PCE on MAGIC, "k=all" means no screening:** all 10 features are used.
+- **Off-manifold R² and RMSE tell different stories, because R² = 1 − MSE / Var(teacher logit).**
+  - On Bioresponse, the students' RMSE is almost the same on and off the manifold (PCE 1.28 → 1.30, EBM 1.37 → 1.35).
+    The teacher's logit variance, however, falls from 7.49 to 2.06: with the columns permuted independently, the
+    teacher's output becomes much flatter. The same absolute error is then a much larger fraction of a smaller
+    variance, so **the R² collapse comes from the denominator, not from larger errors**.
+  - On MAGIC, the errors really grow off-manifold (PCE RMSE 0.79 → 2.65, EBM 0.68 → 1.59), while the teacher's
+    variance changes much less (11.5 → 9.7). There the drop in R² is a real loss of fidelity, and it is larger
+    for the PCE, which has degree-5 terms with three-way interactions.
+- **EBM importance on Bioresponse is the mean |contribution|**, because there the term variances add up to only
+  about 23 % of the prediction variance (section 9).
+- **Screening ablation (Bioresponse; same p, r, q, k per seed, only the screening differs).**
+  - Seed by seed, SHAP screening gives a slightly higher test R² on all 5 seeds (mean difference 0.009 ± 0.006)
+    and a higher pool CV R² on 4 of 5 seeds.
+  - Off-manifold neither screening is consistently better: LASSO is higher on 4 of 5 seeds, but the mean
+    difference is −0.007 ± 0.148.
+  - The two screened sets overlap little: 26–37 % of the k features per seed (37/100, 13/50, 36/100, 34/100, 9/30).
+    Agreement with teacher SHAP and MC S_T is low either way, slightly lower with LASSO screening. The choice of
+    screening therefore changes which interactions enter the PCE, but not how well the PCE's ranking agrees with
+    the teacher's.
+- **Var/D below 1 off-manifold (Bioresponse).** D = Σ c² assumes E[ψ²] = 1, i.e. a uniform z. Most Bioresponse
+  features are discrete: 835 binary and 566 with 3–10 values, of 1,776. After the mid-rank transform, a binary
+  feature with a share π of zeros has E[ψ₁²] = 3π(1 − π) ≤ 0.75. These features are mostly zeros, so on the pool their mean E[ψ₁²] is only 0.25.
+  Terms containing a binary feature carry 66 % of D. Using the pool moments, the predicted off-manifold Var/D is
+  0.79 ± 0.03, against an observed 0.89 ± 0.19. The prediction is within 0.04 of the observation on 3 seeds but
+  not on seeds 0 and 2 (0.78 vs 1.00, 0.83 vs 1.16). It ignores the cross-moments between terms, which is the likely reason (not tested). The discrete
+  features explain most of the gap, but not all of it; features with more than 10 values also have E[ψ₁²] < 1 (0.68).
 
 ## 9. Design choices (short version)
 
@@ -196,15 +268,25 @@ How to read these tables:
 | Bioresponse: SHAP screening on the pool (top *k* features may interact; optionally all features in first order) | the number of interaction candidates otherwise explodes with 1,776 features. |
 | **Off-manifold** fidelity (columns permuted) | Sobol' indices and MC Sobol' assume independent inputs; this measures how the student behaves there. |
 | Teacher **Monte Carlo Sobol'** (Saltelli 2010 first order, Jansen 1999 total, bootstrap CIs) | a like-for-like reference for the PCE's analytic indices, computed on the teacher itself. |
-| EBM importances = variance shares of term contributions | as in the assignment. The terms are not orthogonal, so the code also reports Σ Var(terms) / Var(prediction). |
+| EBM importance: variance share of term contributions (MAGIC); **mean \|contribution\| (Bioresponse)** | set by `ebm.primary_importance` in the configs. The EBM's terms are not orthogonal, so the code checks Σ Var(terms) / Var(prediction). On MAGIC this is close to 1, so the shares behave like a decomposition. On Bioresponse it is only about 0.23 (see `summary_bioresponse.csv`, section `ebm_variance_check`): the terms co-vary strongly, so variance shares are not a decomposition there, and the mean absolute contribution is used instead. Both are saved for both datasets. |
 | Kendall τ over all features **and** over the union of both methods' top-20 | with 1,776 features, ties at zero dominate τ over all features. |
 | XGBoost tuned by 5-fold CV (AUC) with early stopping, then refit on all of teacher-train | a single validation slice was unstable (on Musk it kept one tree). |
 
 ## 10. Limitations
 
-- **Several selected models lie at the edge of their grid:** MAGIC PCE p=4, r=3; MAGIC EBM K=30; Bioresponse PCE
-  screening k=50 on 4 of 5 seeds. CV fidelity was still rising slowly there; larger grids were not explored for
-  compute reasons.
+- **Selected models still lie at the edge of their grid.**
+  - After the first 5-seed run, the PCE grids were extended (`pce.extra_grids` in the configs): MAGIC p=5 with r ≤ 3;
+    Bioresponse k=100 with r=2, p ≤ 3. The selection moved to the new edge: MAGIC p=5, r=3 on 5/5 seeds; Bioresponse
+    k=100 on 3/5 seeds.
+  - Test R² changed little (MAGIC 0.942 → 0.945; Bioresponse 0.774 → 0.774), while off-manifold R² fell (MAGIC
+    0.317 → 0.271; Bioresponse 0.178 → 0.136). Pushing the grid further would buy little fidelity on the manifold
+    and is likely to cost more off it.
+  - **The EBM grid was not extended**: MAGIC K=30 interactions is the largest value tried and was selected on every
+    seed. The EBM grid is the most expensive stage (about 1 h per MAGIC seed).
+- **Bioresponse's off-manifold R² is low partly because the teacher's logit variance shrinks off-manifold**, not
+  only because the students' errors grow (section 8). Read it together with the RMSE.
+- **Analytic PCE variance D overstates the variance for discrete features** (E[ψ²] < 1 after the mid-rank transform),
+  so the Sobol' indices are relative to D, not to the empirical variance (section 8).
 - **The Sobol' indices (analytic and Monte Carlo) are defined for independent inputs, but both datasets have strongly
   dependent features.** The students are fitted on the data manifold and are much less faithful off it (section 8).
 - **Five seeds give a rough estimate of the std.**
@@ -227,6 +309,8 @@ scripts/
   run_all.py        experiment driver (stages teacher, pce, ebm, explain)
   make_figures.py   summaries + figures
   results_table.py  README tables from the summaries
+  ablation_screening.py  Bioresponse: SHAP vs first-order-LASSO screening of interaction features
+  diagnose_var_ratio.py  Bioresponse: feature types and the off-manifold Var/D of the PCE
   check_data.py     dataset download + report
   run_full_windows.bat  full run on Windows, one job at a time, resumable
 tests/              leakage, Legendre orthonormality, PCE and MC Sobol' on Ishigami

@@ -21,6 +21,12 @@ for %%D in (magic bioresponse) do (
   )
 )
 
+echo [!date! !time!] Bioresponse analyses (screening ablation, Var/D diagnosis)
+.venv\Scripts\python -u scripts\ablation_screening.py > logs\phase5_ablation.log 2>&1
+if errorlevel 1 ( echo [!date! !time!]   FAILED ablation - see logs\phase5_ablation.log )
+.venv\Scripts\python -u scripts\diagnose_var_ratio.py > logs\phase5_var_ratio.log 2>&1
+if errorlevel 1 ( echo [!date! !time!]   FAILED var ratio - see logs\phase5_var_ratio.log )
+
 echo [!date! !time!] building figures
 .venv\Scripts\python -u scripts\make_figures.py > logs\phase5_figures.log 2>&1
 if errorlevel 1 (

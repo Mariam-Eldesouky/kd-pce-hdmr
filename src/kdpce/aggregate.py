@@ -77,6 +77,9 @@ def aggregate(name, quick=False):
     vc = _collect(name, "pce_variance_check.csv", quick)
     if len(vc):
         rows += _mean_std(vc, "data", ["D_analytic", "var_empirical", "ratio_var_over_D"], "pce_variance_check")
+    tv = _collect(name, "teacher_logit_variance.csv", quick)
+    if len(tv):
+        rows += _mean_std(tv, "data", ["var_teacher_logit", "sd_teacher_logit"], "teacher_logit_variance")
     ev = _collect(name, "ebm_variance_check.csv", quick)
     if len(ev):
         ev["item"] = "test"
@@ -103,7 +106,7 @@ def aggregate(name, quick=False):
     if len(pg):
         pg = pg[(pg.status == "ok") & (pg.get("variant", "lasso") == "lasso")]
         keys = ["p", "r", "q", "k", "first_order_all"]
-        cols = ["n_terms", "max_order", "cv_r2_pool", "r2_logit_test", "r2_logit_offman",
+        cols = ["n_terms", "max_order", "cv_r2_pool", "r2_logit_test", "r2_logit_offman", "rmse_logit_test", "rmse_logit_offman",
                 "label_agreement_test", "fit_seconds"]
         out = pg.groupby(keys)[cols].agg(["mean", "std", "count"])
         out.columns = [f"{a}_{b}" for a, b in out.columns]
@@ -112,7 +115,7 @@ def aggregate(name, quick=False):
 
     eg = _collect(name, "ebm_grid.csv", quick)
     if len(eg):
-        cols = ["n_terms", "n_parameters", "cv_r2_pool", "r2_logit_test", "r2_logit_offman",
+        cols = ["n_terms", "n_parameters", "cv_r2_pool", "r2_logit_test", "r2_logit_offman", "rmse_logit_test", "rmse_logit_offman",
                 "label_agreement_test", "fit_seconds"]
         out = eg.groupby("interactions")[cols].agg(["mean", "std", "count"])
         out.columns = [f"{a}_{b}" for a, b in out.columns]

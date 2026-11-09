@@ -20,6 +20,7 @@ import pandas as pd  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 
 from .aggregate import RESULTS, seed_dirs  # noqa: E402
+from .data import load_config  # noqa: E402
 
 FIGURES = RESULTS.parent / "figures"
 COLORS = {"PCE": "#2a78d6", "EBM": "#eb6834", "SHAP": "#1baf7a", "MC": "#eda100"}
@@ -29,8 +30,15 @@ DIVERGING = LinearSegmentedColormap.from_list(   # blue <-> gray midpoint <-> re
     "div", ["#184f95", "#6da7ec", "#f0efec", "#ec8a89", "#b83232"])
 LABELS = {"magic": "MAGIC (d = 10)", "bioresponse": "Bioresponse (d = 1,776)"}
 METHOD_LABELS = {"PCE_ST": "PCE $S_T$", "PCE_S1": "PCE $S_1$", "EBM_total": "EBM total",
-                 "EBM_first": "EBM first", "EBM_meanabs": "EBM mean|f|", "SHAP": "SHAP",
+                 "EBM_first": "EBM first", "EBM_meanabs": "EBM mean |contrib.|", "SHAP": "SHAP",
                  "MC_ST": "Teacher MC $S_T$", "MC_S1": "Teacher MC $S_1$"}
+EBM_IMPORTANCE = {"total": "EBM_total", "mean_abs": "EBM_meanabs"}
+
+
+def primary_ebm(name):
+    """The EBM importance used as 'the' EBM explanation for a dataset (configs: ebm.primary_importance).
+    Bioresponse uses mean |contribution|: its term variances add up to only ~23% of Var(prediction)."""
+    return EBM_IMPORTANCE[load_config(name)["ebm"].get("primary_importance", "total")]
 
 
 def setup():
@@ -117,7 +125,7 @@ def fig_tradeoff(datasets, quick=False):
 # ----------------------------------------------------------------------------------------
 # Figure 2: feature rankings, one panel per method (small multiples)
 # ----------------------------------------------------------------------------------------
-FIG2_METHODS = [("PCE_ST", "PCE"), ("EBM_total", "EBM"), ("SHAP", "SHAP"), ("MC_ST", "MC")]
+FIG2_METHODS = [("PCE_ST", "PCE"), ("EBM", "EBM"), ("SHAP", "SHAP"), ("MC_ST", "MC")]  # "EBM" -> primary_ebm()
 
 
 def fig_rankings(datasets, quick=False, top=10):
@@ -131,6 +139,7 @@ def fig_rankings(datasets, quick=False, top=10):
             continue
         order = (ex[ex.method == "MC_ST"].nlargest(top, "score_mean")["feature"].tolist())[::-1]
         for j, (method, key) in enumerate(FIG2_METHODS):
+            method = primary_ebm(name) if method == "EBM" else method
             ax = axes[i, j]
             d = ex[ex.method == method].set_index("feature")
             total = d["score_mean"].clip(lower=0).sum()
@@ -144,10 +153,9 @@ def fig_rankings(datasets, quick=False, top=10):
             ax.set_yticks(y, order)
             ax.set_xlim(left=0)
             ax.grid(axis="y", visible=False)
-            if i == 0:
-                ax.set_title(METHOD_LABELS[method])
+            ax.set_title(METHOD_LABELS[method])           # every row: the EBM measure differs by dataset
             if i == len(datasets) - 1:
-                ax.set_xlabel("share of importance")
+                ax.set_xlabel("share of importance\n(normalised to sum to 1)")
             if j == 0:
                 ax.set_ylabel(LABELS.get(name, name))
     fig.suptitle(f"Top-{top} features by teacher Monte Carlo $S_T$ (mean over seeds)", fontsize=8, y=1.0)
@@ -158,7 +166,7 @@ def fig_rankings(datasets, quick=False, top=10):
 # ----------------------------------------------------------------------------------------
 # Figure 3: agreement heatmaps (Kendall tau, mean over seeds)
 # ----------------------------------------------------------------------------------------
-HEAT_METHODS = ["PCE_ST", "PCE_S1", "EBM_total", "EBM_first", "SHAP", "MC_ST", "MC_S1"]
+HEAT_METHODS = ["PCE_ST", "PCE_S1", "EBM_total", "EBM_meanabs", "SHAP", "MC_ST", "MC_S1"]
 
 
 def _tau_matrix(name, quick, col):
@@ -217,7 +225,10 @@ def _pooled_predictions(name, quick, student):
 
 
 def fig_failures(datasets, quick=False, n_bins=8):
-    fig, axes = plt.subplots(2, len(datasets), figsize=(7.0, 4.4), squeeze=False)
+    """Row 1: mean |student - teacher| vs teacher confidence (test rows pooled over seeds).
+    Rows 2-3: fidelity R^2 and RMSE on the test set vs the off-manifold set. R^2 = 1 - MSE / Var(teacher
+    logit) also depends on how much the teacher's logit varies on each set; RMSE (logit units) does not."""
+    fig, axes = plt.subplots(3, len(datasets), figsize=(7.0, 6.4), squeeze=False)
     for j, name in enumerate(datasets):
         ax = axes[0, j]
         for student in ["PCE", "EBM"]:
@@ -239,29 +250,34 @@ def fig_failures(datasets, quick=False, n_bins=8):
         if j == 0:
             ax.legend()
 
-        ax = axes[1, j]
         s = _summary(name, "", quick)
         if s is None:
             continue
-        f = s[(s.section == "fidelity")]
-        x = np.arange(2)
-        for k, student in enumerate(["PCE", "EBM"]):
-            vals = [f[(f["item"] == student) & (f.metric == m)] for m in ["r2_logit_test", "r2_logit_offman"]]
-            means = [v["mean"].iloc[0] if len(v) else np.nan for v in vals]
-            stds = [v["std"].fillna(0).iloc[0] if len(v) else 0 for v in vals]
-            ax.bar(x + (k - 0.5) * 0.36, means, width=0.34, yerr=stds, color=COLORS[student],
-                   edgecolor="white", linewidth=1.0, label=student, error_kw={"elinewidth": 0.6})
-            for xi, m in zip(x + (k - 0.5) * 0.36, means):
-                ax.annotate(f"{m:.2f}", (xi, max(m, 0)), xytext=(0, 2), textcoords="offset points",
-                            ha="center", fontsize=6, color=INK)
-        ax.axhline(0, color=INK2, lw=0.6)
-        if j == 0:
-            ax.legend(loc="upper right")
-        ax.set_xticks(x, ["test set", "off-manifold\n(columns permuted)"])
-        ax.set_ylabel("fidelity $R^2$ on logits")
-        ax.grid(axis="x", visible=False)
+        f = s[s.section == "fidelity"]
+        _fidelity_bars(axes[1, j], f, "r2_logit", "fidelity $R^2$ on logits", legend=(j == 0))
+        _fidelity_bars(axes[2, j], f, "rmse_logit", "RMSE on logits", legend=False)
     fig.tight_layout()
     return _save(fig, "fig4_failures", quick)
+
+
+def _fidelity_bars(ax, f, metric, ylabel, legend):
+    """Grouped bars: test vs off-manifold, PCE vs EBM; mean over seeds, error bar = std over seeds."""
+    x = np.arange(2)
+    for k, student in enumerate(["PCE", "EBM"]):
+        vals = [f[(f["item"] == student) & (f.metric == m)] for m in [f"{metric}_test", f"{metric}_offman"]]
+        means = [v["mean"].iloc[0] if len(v) else np.nan for v in vals]
+        stds = [v["std"].fillna(0).iloc[0] if len(v) else 0 for v in vals]
+        ax.bar(x + (k - 0.5) * 0.36, means, width=0.34, yerr=stds, color=COLORS[student],
+               edgecolor="white", linewidth=1.0, label=student, error_kw={"elinewidth": 0.6})
+        for xi, m in zip(x + (k - 0.5) * 0.36, means):
+            ax.annotate(f"{m:.2f}", (xi, max(m, 0)), xytext=(0, 2), textcoords="offset points",
+                        ha="center", fontsize=6, color=INK)
+    ax.axhline(0, color=INK2, lw=0.6)
+    if legend:
+        ax.legend(loc="upper right")
+    ax.set_xticks(x, ["test set", "off-manifold\n(columns permuted)"])
+    ax.set_ylabel(ylabel)
+    ax.grid(axis="x", visible=False)
 
 
 # ----------------------------------------------------------------------------------------
@@ -291,7 +307,7 @@ def fig_sobol_check(name="magic", quick=False):
                     capsize=0, label="PCE student, analytic (± std over seeds)")
         ax.set_yticks(y, order)
         ax.set_title(title)
-        ax.set_xlabel("Sobol' index (independent-input model)")
+        ax.set_xlabel("raw Sobol' index, not normalised\n(independent-input model)")
         ax.grid(axis="y", visible=False)
     axes[1].legend(loc="lower right")
     fig.tight_layout()
